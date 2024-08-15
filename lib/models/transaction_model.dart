@@ -1,3 +1,4 @@
+
 class TransactionModel {
   String title;
   String description;
@@ -11,9 +12,43 @@ class TransactionModel {
     required this.date
   });
 
+  get length => null;
+
   static List<TransactionModel> getTransactions() {
     List<TransactionModel> transactions = [];
 
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
     transactions.add(
       TransactionModel(
         title: 'Jedzenie',
