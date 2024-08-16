@@ -57,6 +57,46 @@ class TransactionModel {
         date: DateTime(2024,8,5)
       )
     );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
+    transactions.add(
+      TransactionModel(
+        title: 'Jedzenie',
+        description: 'Kupiłem se nicnacsy',
+        value: 10.49,
+        date: DateTime(2024,8,5)
+      )
+    );
 
     return transactions;
   }
