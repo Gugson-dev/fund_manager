@@ -16,10 +16,18 @@ class _HomePageState extends State<HomePage> {
   TextEditingController descriptionController = TextEditingController();
   TextEditingController valueController = TextEditingController();
   
+
+  @override
+  void initState(){
+    super.initState();
+    _getTransactions();
+  }
   
 
   void _getTransactions() {
-    transactions = TransactionModel.getTransactions();
+    setState(() {
+      transactions = TransactionModel.getTransactions();
+    });
   }
 
   void clearControllers() {
@@ -28,20 +36,15 @@ class _HomePageState extends State<HomePage> {
     valueController.clear();
   }
 
-  Future<void> addTransaction(BuildContext context) async {
+  Future<void> showAddTransactionDialog(BuildContext context, bool isExpense) async {
+    final title = isExpense ? 'Dodaj wpłatę' : 'Dodaj wydatek';
     return showDialog(
       useSafeArea: true,
       barrierDismissible: false,
       context: context, 
       builder: (context) {
         return AlertDialog(
-          title: const Text('Dodaj transakcje'),
-          titleTextStyle: const TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-            color: Colors.black
-          ),
-          backgroundColor: Colors.amberAccent,
+          title: Text(title),
           content: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -54,7 +57,6 @@ class _HomePageState extends State<HomePage> {
                     controller: titleController,
                     decoration: const InputDecoration(
                       labelText: 'Tytuł transakcji',
-                      border: OutlineInputBorder()
                     ),
                   ),
                   const SizedBox(height: 20,),
@@ -64,7 +66,6 @@ class _HomePageState extends State<HomePage> {
                     maxLines: 4,
                     decoration: const InputDecoration(
                       labelText: 'Opis',
-                      border: OutlineInputBorder()
                     ),
                   ),
                   const SizedBox(height: 20,),
@@ -73,7 +74,6 @@ class _HomePageState extends State<HomePage> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Kwota',
-                      border: OutlineInputBorder()
                     ),
                   ),
                 ],
@@ -90,14 +90,22 @@ class _HomePageState extends State<HomePage> {
               ),
             ElevatedButton(
               onPressed: (){
-                transactions.add(
-                  TransactionModel(
-                    title: titleController.text, 
-                    description: descriptionController.text, 
-                    value: double.parse(valueController.text), 
-                    date: DateTime.now()
-                  )
-                );
+                setState(() {
+                  double? value = double.tryParse(valueController.text);
+                  if (value != null) {
+                    if (!isExpense) {
+                      value *= -1;
+                    }
+                  }
+                  transactions.add(
+                    TransactionModel(
+                      title: titleController.text, 
+                      description: descriptionController.text, 
+                      value: value, 
+                      date: DateTime.now()
+                    )
+                  );  
+                });
                 Navigator.pop(context);
                 clearControllers();
               },
@@ -110,11 +118,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    _getTransactions();
-
     return Scaffold(
       backgroundColor: Colors.grey,
-      appBar: appBar(),
+      appBar: appBar(context),
       body:  LayoutBuilder(builder: (context, constraints) {
         return SafeArea(
           child: ListView(
@@ -125,11 +131,28 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   children: [              
                     //searchField(),
-                    ElevatedButton(
-                      onPressed: () {
-                        addTransaction(context);
-                      }, 
-                      child: const Text('Dodaj Transakcje')
+                    const SizedBox(height: 20,),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber,
+                            foregroundColor: Colors.black
+                          ),
+                          onPressed: () {
+                            showAddTransactionDialog(context,true);
+                          }, 
+                          child: const Text('Dodaj wpłatę')
+                        ),
+                        const SizedBox(width: 20,),
+                        ElevatedButton(
+                          onPressed: () {
+                            showAddTransactionDialog(context,false);
+                          }, 
+                          child: const Text('Dodaj wydatek')
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20,),
                     const Text(

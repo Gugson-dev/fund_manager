@@ -1,4 +1,5 @@
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction_model.dart';
@@ -17,56 +18,94 @@ import '../models/transaction_model.dart';
                       color: Colors.black,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Row(
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    transactions[index].title, 
-                                    style: const TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          transactions[index].title, 
+                                          style: const TextStyle(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white
+                                          ),
+                                        ),
+                                        const SizedBox(width: 15,),
+                                        Text(
+                                          DateFormat('dd-MM-yyyy').format(transactions[index].date),
+                                          style: const TextStyle(
+                                            color: Colors.grey
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 15,),
                                   Text(
-                                    DateFormat('dd-MM-yyyy').format(transactions[index].date),
-                                    style: const TextStyle(
-                                      color: Colors.grey
+                                    transactions[index].value.toString(),
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: transactions[index].value! >= 0 ? Colors.green : Colors.red 
                                     ),
-                                  ),
+                                  )
                                 ],
                               ),
-                            ),
-                            Text(
-                              transactions[index].value.toString(),
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: transactions[index].value >= 0 ? Colors.green : Colors.red 
+                              const Divider(
+                                height: 12,
+                                thickness: 2,
                               ),
-                            )
-                          ],
-                        ),
-                        const Divider(
-                          height: 12,
-                          thickness: 2,
-                        ),
-                        Align(
-                          alignment: Alignment.topLeft,
-                          child: Text(
-                            transactions[index].description,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 20,
-                            ),
+                              Align(
+                                alignment: Alignment.topLeft,
+                                child: Text(
+                                  transactions[index].description,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Informacje'),
+                                  content: const Text('Karolina to najpiękniejsza dziewczyna na świecie'),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const Text('Zamknij'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.all(10),
+                            alignment: Alignment.center,
+                            width: 37,
+                            child: const Icon(
+                              CupertinoIcons.ellipsis_vertical,
+                              color: Colors.white,
+                              size: 24.0,
+                              semanticLabel: 'Info',
+                            )          
+                          ),
+                        )
                       ],
                     ),
                   );
