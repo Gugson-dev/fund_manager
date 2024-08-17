@@ -12,19 +12,10 @@ import '../models/transaction_model.dart';
                 scrollDirection: Axis.vertical,
                 separatorBuilder: (context, index) => const SizedBox(height: 10,),
                 itemBuilder: (context, index) {
-                  return Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Row(
+                  return Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: ExpansionTile(
+                      title: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   Expanded(
@@ -44,7 +35,7 @@ import '../models/transaction_model.dart';
                                           style: const TextStyle(
                                             color: Colors.grey
                                           ),
-                                        ),
+                                        )
                                       ],
                                     ),
                                   ),
@@ -57,57 +48,72 @@ import '../models/transaction_model.dart';
                                   )
                                 ],
                               ),
-                              const Divider(
-                                height: 12,
-                                thickness: 2,
-                              ),
-                              Align(
-                                alignment: Alignment.topLeft,
-                                child: Text(
-                                  transactions[index].description,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                      children: [
+                        const Divider(
+                          height: 2,
+                          thickness: 100,
+                          color: Colors.white,
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Informacje'),
-                                  content: const Text('Karolina to najpiękniejsza dziewczyna na świecie'),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.only(
+                                left: 10,
+                                right: 10
+                              ),
+                              decoration: const BoxDecoration(
+                                color: Color.fromARGB(255, 63, 63, 63)
+                              ),
+                              child:Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        transactions[index].description,
+                                        style: const TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: const Text('Informacje'),
+                                              content: const Text('Karolina to najpiękniejsza dziewczyna na świecie'),
+                                              actions: [
+                                                ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: const Text('Zamknij'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
                                       },
-                                      child: const Text('Zamknij'),
+                                      child: Container(
+                                        margin: const EdgeInsets.all(10),
+                                        alignment: Alignment.centerRight,
+                                        child: const Icon(
+                                          CupertinoIcons.ellipsis_vertical,
+                                          color: Colors.white,
+                                          size: 24.0,
+                                          semanticLabel: 'Info',
+                                        )          
+                                      ),
                                     ),
                                   ],
-                                );
-                              },
-                            );
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.all(10),
-                            alignment: Alignment.center,
-                            width: 37,
-                            child: const Icon(
-                              CupertinoIcons.ellipsis_vertical,
-                              color: Colors.white,
-                              size: 24.0,
-                              semanticLabel: 'Info',
-                            )          
-                          ),
+                                ),
+                            ),
+                          ]
                         )
-                      ],
-                    ),
+                      ]
+                    )
                   );
                 }
               )

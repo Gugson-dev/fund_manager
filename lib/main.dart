@@ -73,6 +73,17 @@ class FundManager extends StatelessWidget {
             color: Colors.black
           )
         ),
+        dividerColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        expansionTileTheme: ExpansionTileThemeData(
+          backgroundColor: Colors.black,
+          collapsedBackgroundColor: Colors.black,
+          collapsedIconColor: Colors.white,
+          iconColor: Colors.white,
+          expansionAnimationStyle: AnimationStyle(
+            duration: Durations.long1
+          )
+        )
       ),
       home: const HomePage()
     );
