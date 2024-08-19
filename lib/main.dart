@@ -83,6 +83,11 @@ class FundManager extends StatelessWidget {
           expansionAnimationStyle: AnimationStyle(
             duration: Durations.long1
           )
+        ),
+        popupMenuTheme: const PopupMenuThemeData(
+          iconSize: 20,
+          iconColor: Colors.white,
+          position: PopupMenuPosition.under
         )
       ),
       home: const HomePage()

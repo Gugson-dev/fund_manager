@@ -165,7 +165,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 15,),
                     Expanded(
-                      child: transactionHistory(transactions, context)
+                      child: transactionHistory(transactions, context, () {setState(() {});})
                     ),
                   ],
                 )
@@ -173,8 +173,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         );
-      }
-      ),
+      }),
     );
   }
 }
