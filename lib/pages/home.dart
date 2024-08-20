@@ -102,7 +102,8 @@ class _HomePageState extends State<HomePage> {
                       title: titleController.text, 
                       description: descriptionController.text, 
                       value: value, 
-                      date: DateTime.now()
+                      date: DateTime.now(),
+                      isExpense: isExpense
                     )
                   );  
                 });

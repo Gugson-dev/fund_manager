@@ -6,11 +6,11 @@ import '../models/transaction_model.dart';
 
 enum Menu {edytuj, usun}
 
-Future<void> showEditTransactionDialog(BuildContext context, bool isExpense, List<TransactionModel> transactions, int index, VoidCallback onUpdate) async {
+Future<void> showEditTransactionDialog(BuildContext context, List<TransactionModel> transactions, int index, VoidCallback onUpdate) async {
   TextEditingController titleController = TextEditingController(text: transactions[index].title);
   TextEditingController descriptionController = TextEditingController(text: transactions[index].description);
   TextEditingController valueController = TextEditingController(text: transactions[index].value?.abs().toString());
-  final title = isExpense ? 'Edytuj wpłatę' : 'Edytuj wydatek';
+  final title = transactions[index].isExpense ? 'Edytuj wpłatę' : 'Edytuj wydatek';
   
   return showDialog(
     useSafeArea: true,
@@ -58,9 +58,6 @@ Future<void> showEditTransactionDialog(BuildContext context, bool isExpense, Lis
           ElevatedButton(
             onPressed: (){
               Navigator.pop(context);
-              titleController.clear();
-              descriptionController.clear();
-              valueController.clear();
             }, 
             child: const Text('Zamknij')
             ),
@@ -68,7 +65,7 @@ Future<void> showEditTransactionDialog(BuildContext context, bool isExpense, Lis
             onPressed: (){
               double? value = double.tryParse(valueController.text);
               if (value != null) {
-                if (!isExpense) {
+                if (!transactions[index].isExpense) {
                   value *= -1;
                 }
               }
@@ -78,9 +75,6 @@ Future<void> showEditTransactionDialog(BuildContext context, bool isExpense, Lis
               //implement custom date
               onUpdate();
               Navigator.pop(context);
-              titleController.clear();
-              descriptionController.clear();
-              valueController.clear();
             },
               child: const Text('Zmień'))
         ],
@@ -167,7 +161,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                                       PopupMenuItem<Menu>(
                                         value: Menu.edytuj,
                                         onTap: () {
-                                          showEditTransactionDialog(context, true, transactions, index, onUpdate);
+                                          showEditTransactionDialog(context, transactions, index, onUpdate);
                                         },
                                         child: const ListTile(
                                           leading: Icon(
