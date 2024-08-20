@@ -1,60 +1,64 @@
-  import 'package:flutter/material.dart';
-  import 'package:flutter/cupertino.dart';
-  
-  AppBar appBar() {
-    return AppBar(
-      title: const Text(
-        'Fund Manager',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 18,
-          fontWeight: FontWeight.bold
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:fund_manager/pages/home.dart';
+
+AppBar appBar(BuildContext context) {
+  return AppBar(
+    title: const Text('Fund Manager'),
+    elevation: 0.0,
+    centerTitle: true,
+    leading: 
+      GestureDetector(
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage())  
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.all(10),
+          alignment: Alignment.center,
+          child: const Icon(
+            CupertinoIcons.chevron_back,
+            color: Colors.black,
+            size: 27.0,
+            semanticLabel: 'Powrót',
+          ) 
         ),
       ),
-      backgroundColor: Colors.amber,
-      elevation: 0.0,
-      centerTitle: true,
-      leading: 
-        GestureDetector(
-          onTap: () {
-
-          },
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(10)
-            ),
-            child: const Icon(
-              CupertinoIcons.chevron_back,
-              color: Colors.black,
-              size: 27.0,
-              semanticLabel: 'Go back',
-            ) 
-          ),
+    actions: [
+      GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Informacje'),
+                content: const Text('Karolina to najpiękniejsza dziewczyna na świecie'),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Zamknij'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.all(10),
+          alignment: Alignment.center,
+          width: 37,
+          child: const Icon(
+            CupertinoIcons.info_circle,
+            color: Colors.black,
+            size: 24.0,
+            semanticLabel: 'Info',
+          )          
         ),
-      actions: [
-        GestureDetector(
-          onTap: () {
-
-          },
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            alignment: Alignment.center,
-            width: 37,
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(10)
-            ),
-            child: const Icon(
-              CupertinoIcons.info_circle,
-              color: Colors.black,
-              size: 24.0,
-              semanticLabel: 'Info',
-            )          
-          ),
-        )
-      ],
-    );
-  }
+      )
+    ],
+  );
+}
