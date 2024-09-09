@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -95,38 +94,53 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                   clipBehavior: Clip.antiAlias,
                   child: ExpansionTile(
                     title: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child:
+                            Row(
                               children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        transactions[index].title, 
-                                        style: const TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white
-                                        ),
+                                Flexible(
+                                  fit: FlexFit.loose,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      final snackBar = SnackBar(
+                                        content: SelectableText(transactions[index].title),
+                                      );
+                                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                    },
+                                    child: Text(
+                                      transactions[index].title,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white
                                       ),
-                                      const SizedBox(width: 15,),
-                                      Text(
-                                        DateFormat('dd-MM-yyyy').format(transactions[index].date),
-                                        style: const TextStyle(
-                                          color: Colors.grey
-                                        ),
-                                      )
-                                    ],
+                                    ),
                                   ),
                                 ),
+                                const SizedBox(width: 10,),
                                 Text(
-                                  transactions[index].value.toString(),
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: transactions[index].value! >= 0 ? Colors.green : Colors.red 
+                                  overflow: TextOverflow.ellipsis,
+                                  DateFormat('dd-MM-yyyy').format(transactions[index].date),
+                                  style: const TextStyle(
+                                    color: Colors.grey
                                   ),
-                                )
+                                ),
                               ],
                             ),
+                        ),    
+                        const SizedBox(width: 15,),
+                        Text(
+                          transactions[index].value.toString(),
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: transactions[index].value! >= 0 ? Colors.green : Colors.red 
+                          ),
+                        )
+                      ],
+                    ),
                     children: [
                       const Divider(
                         height: 2,
