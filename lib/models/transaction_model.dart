@@ -1,4 +1,3 @@
-
 class TransactionModel {
   String title;
   String description;
@@ -11,13 +10,26 @@ class TransactionModel {
     required this.description,
     required this.value,
     required this.date,
-    required this.isExpense
+    required this.isExpense,
   });
 
-  get length => null;
+  factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    return TransactionModel(
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      value: (json['value'] as num?)?.toDouble(),
+      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
+      isExpense: json['isExpense'] ?? false,
+    );
+  }
 
-  static List<TransactionModel> getTransactions() {
-    List<TransactionModel> transactions = [];
-    return transactions;
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description,
+      'value': value,
+      'date': date.toIso8601String(),
+      'isExpense': isExpense,
+    };
   }
 }

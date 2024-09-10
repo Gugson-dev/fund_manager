@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/transactions_history.dart';
@@ -24,10 +26,23 @@ class _HomePageState extends State<HomePage> {
   }
   
 
-  void _getTransactions() {
+  void _getTransactions() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      transactions = TransactionModel.getTransactions();
+      final transactionsData = prefs.getString('transactions');
+      
+      if (transactionsData != null) {
+        final decodedData = json.decode(transactionsData) as List;
+        transactions.addAll(
+          decodedData.map((transactionMap) => TransactionModel.fromJson(transactionMap)).toList()
+        );
+      }
     });
+  }
+
+  void _saveTransactions() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('transactions', json.encode(transactions));
   }
 
   void clearControllers() {
@@ -107,14 +122,16 @@ class _HomePageState extends State<HomePage> {
                     )
                   );  
                 });
+                _saveTransactions();
                 Navigator.pop(context);
                 clearControllers();
               },
-               child: const Text('Dodaj'))
+              child: const Text('Dodaj')
+            )
           ],
         );
       }
-      );
+    );
   }
 
   @override
@@ -166,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 15,),
                     Expanded(
-                      child: transactionHistory(transactions, context, () {setState(() {});})
+                      child: transactionHistory(transactions, context, () {setState(() {_saveTransactions();});})
                     ),
                   ],
                 )
