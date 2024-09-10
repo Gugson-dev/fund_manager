@@ -82,7 +82,7 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
     );
 }
   
-Container transactionHistory(List<TransactionModel> transactions, BuildContext context, VoidCallback onUpdate) { 
+Container transactionHistory(List<TransactionModel> transactions, BuildContext context, VoidCallback onUpdate) {
   return Container(
             margin: const EdgeInsets.only(left: 20, right: 20),
             child: ListView.separated(
@@ -90,6 +90,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
               scrollDirection: Axis.vertical,
               separatorBuilder: (context, index) => const SizedBox(height: 10,),
               itemBuilder: (context, index) {
+                double? value = transactions[index].value!;
                 return Card(
                   clipBehavior: Clip.antiAlias,
                   child: ExpansionTile(
@@ -133,10 +134,10 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                         ),    
                         const SizedBox(width: 15,),
                         Text(
-                          transactions[index].value.toString(),
+                          '${value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2)} zł',
                           style: TextStyle(
                             fontSize: 20,
-                            color: transactions[index].value! >= 0 ? Colors.green : Colors.red 
+                            color: value == 0 ? Colors.grey : value > 0 ? Colors.green : Colors.red
                           ),
                         )
                       ],
