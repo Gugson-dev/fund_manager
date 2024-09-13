@@ -36,6 +36,12 @@ AppBar appBar(BuildContext context) {
                 title: const Text('Informacje'),
                 content: const Text('Karolina to najpiękniejsza dziewczyna na świecie'),
                 actions: [
+                  TextButton(
+                    onPressed: () {
+                      showLicensePage(context: context);
+                    },
+                    child: const Text('Pokaż licencje'),
+                  ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(context).pop();

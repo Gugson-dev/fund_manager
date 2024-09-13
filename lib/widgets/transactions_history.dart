@@ -1,23 +1,42 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction_model.dart';
 
 enum Menu {edytuj, usun}
 
-Future<void> showEditTransactionDialog(BuildContext context, List<TransactionModel> transactions, int index, VoidCallback onUpdate) async {
+Future<void> showEditTransactionDialog(BuildContext context, List<TransactionModel> transactions, int index, VoidCallback onUpdate, TabController tabController) async {
   TextEditingController titleController = TextEditingController(text: transactions[index].title);
   TextEditingController descriptionController = TextEditingController(text: transactions[index].description);
   TextEditingController valueController = TextEditingController(text: transactions[index].value?.abs().toString());
-  final title = transactions[index].isExpense ? 'Edytuj wpłatę' : 'Edytuj wydatek';
+  bool isExpense = transactions[index].isExpense;
   
   return showDialog(
     useSafeArea: true,
     barrierDismissible: false,
     context: context, 
     builder: (context) {
+      isExpense ? tabController.index = 1 : tabController.index = 0;
       return AlertDialog(
-        title: Text(title),
+        title: TabBar(
+                    controller: tabController,
+                    onTap: (value) {
+                        if (tabController.index == 0) {
+                          isExpense = false;
+                        } else {
+                          isExpense = true;
+                        }
+                    },
+                    tabs: const [
+                      Tab(
+                        child: Text('Wpłata')
+                      ),
+                      Tab(
+                        child: Text('Wydatek'),
+                      )
+                    ]
+                  ),
         content: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -64,16 +83,26 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
             onPressed: (){
               double? value = double.tryParse(valueController.text);
               if (value != null) {
-                if (!transactions[index].isExpense) {
+                if (isExpense) {
                   value *= -1;
                 }
+                transactions[index] = 
+                  TransactionModel(
+                    title: titleController.text, 
+                    description: descriptionController.text, 
+                    value: value, 
+                    date: DateTime.now(),
+                    isExpense: isExpense
+                  );
+                //implement custom date
+                onUpdate();
+                Navigator.pop(context);
+              } else {
+                const snackBar = SnackBar(
+                  content: SelectableText('Źle wypełniona kwota'),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
               }
-              transactions[index].title = titleController.text;
-              transactions[index].description = descriptionController.text;
-              transactions[index].value = value;
-              //implement custom date
-              onUpdate();
-              Navigator.pop(context);
             },
               child: const Text('Zmień'))
         ],
@@ -82,7 +111,7 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
     );
 }
   
-Container transactionHistory(List<TransactionModel> transactions, BuildContext context, VoidCallback onUpdate) {
+Container transactionHistory(List<TransactionModel> transactions, BuildContext context, VoidCallback onUpdate, TabController tabController) {
   return Container(
             margin: const EdgeInsets.only(left: 20, right: 20),
             child: ListView.separated(
@@ -94,53 +123,77 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                 return Card(
                   clipBehavior: Clip.antiAlias,
                   child: ExpansionTile(
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child:
-                            Row(
-                              children: [
-                                Flexible(
-                                  fit: FlexFit.loose,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      final snackBar = SnackBar(
-                                        content: SelectableText(transactions[index].title),
-                                      );
-                                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                                    },
-                                    child: Text(
-                                      transactions[index].title,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white
+                    title: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: constraints.maxWidth*0.90),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Clipboard.setData(ClipboardData(text: transactions[index].title)).then((_) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        duration: Durations.long2,
+                                        showCloseIcon: true,
+                                        behavior: SnackBarBehavior.floating,
+                                        width: MediaQuery.of(context).size.width*0.3,
+                                        content: const Text('Title copied to clipboard')
+                                      )
+                                    );
+                                  });
+                                },
+                                child: Text(
+                                  transactions[index].title,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Flexible(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(left: 2),
+                                      child: Text(
+                                        DateFormat('dd-MM-yyyy').format(transactions[index].date),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Colors.grey
+                                        ),
+                                      ),
+                                    ),
+                                  ),    
+                                  Flexible(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 8.0),
+                                        child: Text(
+                                          '${value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2)} zł',
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: value == 0 ? Colors.grey : value > 0 ? Colors.green : Colors.red
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 10,),
-                                Text(
-                                  overflow: TextOverflow.ellipsis,
-                                  DateFormat('dd-MM-yyyy').format(transactions[index].date),
-                                  style: const TextStyle(
-                                    color: Colors.grey
-                                  ),
-                                ),
-                              ],
-                            ),
-                        ),    
-                        const SizedBox(width: 15,),
-                        Text(
-                          '${value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2)} zł',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: value == 0 ? Colors.grey : value > 0 ? Colors.green : Colors.red
-                          ),
-                        )
-                      ],
+                                ],
+                              ),
+                            )
+                          ],
+                        );
+                      },
                     ),
                     children: [
                       const Divider(
@@ -165,7 +218,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                                     child: Text(
                                       transactions[index].description,
                                       style: const TextStyle(
-                                        color: Colors.white70,
+                                        color: Colors.white,
                                         fontSize: 20,
                                       ),
                                     ),
@@ -176,7 +229,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                                       PopupMenuItem<Menu>(
                                         value: Menu.edytuj,
                                         onTap: () {
-                                          showEditTransactionDialog(context, transactions, index, onUpdate);
+                                          showEditTransactionDialog(context, transactions, index, onUpdate, tabController);
                                         },
                                         child: const ListTile(
                                           leading: Icon(

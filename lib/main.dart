@@ -38,7 +38,7 @@ class FundManager extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Colors.blueGrey[800]),
           bodyLarge: TextStyle(
-              fontSize: 16,
+              fontSize: 8,
               fontWeight: FontWeight.bold,
               color: Colors.blueGrey[800]),
           bodyMedium: TextStyle(fontSize: 14, color: Colors.blueGrey[700]),
@@ -58,7 +58,7 @@ class FundManager extends StatelessWidget {
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: Colors.amber,
+            foregroundColor: Colors.black,
           ),
         ),
         dialogTheme: const DialogTheme(
