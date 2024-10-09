@@ -1,15 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction_model.dart';
+import '../one_period_input_formatter.dart';
 
 enum Menu {edytuj, usun}
 
 Future<void> showEditTransactionDialog(BuildContext context, List<TransactionModel> transactions, int index, VoidCallback onUpdate, TabController tabController) async {
   TextEditingController titleController = TextEditingController(text: transactions[index].title);
   TextEditingController descriptionController = TextEditingController(text: transactions[index].description);
-  TextEditingController valueController = TextEditingController(text: transactions[index].value?.abs().toString());
+  TextEditingController valueController = TextEditingController(text: transactions[index].value);
   bool isExpense = transactions[index].isExpense;
   
   return showDialog(
@@ -67,6 +69,10 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
                   decoration: const InputDecoration(
                     labelText: 'Kwota',
                   ),
+                   inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and periods
+                    OnePeriodInputFormatter(), // Custom formatter for one period
+                  ],
                 ),
               ],
             ),
@@ -81,28 +87,20 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
             ),
           ElevatedButton(
             onPressed: (){
-              double? value = double.tryParse(valueController.text);
-              if (value != null) {
-                if (isExpense) {
-                  value *= -1;
+                if (valueController.text.length == valueController.text.indexOf('.')+2) {
+                  valueController.text += '0';
                 }
                 transactions[index] = 
                   TransactionModel(
                     title: titleController.text, 
                     description: descriptionController.text, 
-                    value: value, 
+                    value: valueController.text, 
                     date: DateTime.now(),
                     isExpense: isExpense
                   );
                 //implement custom date
                 onUpdate();
                 Navigator.pop(context);
-              } else {
-                const snackBar = SnackBar(
-                  content: SelectableText('Źle wypełniona kwota'),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              }
             },
               child: const Text('Zmień'))
         ],
@@ -119,7 +117,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
               scrollDirection: Axis.vertical,
               separatorBuilder: (context, index) => const SizedBox(height: 10,),
               itemBuilder: (context, index) {
-                double? value = transactions[index].value!;
+                String value = transactions[index].value;
                 return Card(
                   clipBehavior: Clip.antiAlias,
                   child: ExpansionTile(
@@ -129,7 +127,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: constraints.maxWidth*0.90),
+                              constraints: BoxConstraints(maxWidth: constraints.maxWidth*0.5),
                               child: GestureDetector(
                                 onTap: () {
                                   Clipboard.setData(ClipboardData(text: transactions[index].title)).then((_) {
@@ -148,7 +146,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                                   transactions[index].title,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 25,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white
                                   ),
@@ -161,33 +159,36 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Flexible(
+                                    flex: 1,
                                     child: Padding(
-                                      padding: const EdgeInsets.only(left: 2),
+                                      padding: const EdgeInsets.only(left: 8),
                                       child: Text(
                                         DateFormat('dd-MM-yyyy').format(transactions[index].date),
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
+                                          fontSize: 10,
                                           color: Colors.grey
                                         ),
                                       ),
                                     ),
                                   ),    
-                                  Flexible(
+                                  Expanded(
+                                    flex: 10,
                                     child: Align(
                                       alignment: Alignment.centerRight,
                                       child: Padding(
                                         padding: const EdgeInsets.only(left: 8.0),
                                         child: Text(
-                                          '${value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2)} zł',
+                                          '${transactions[index].isExpense ? '-' : ''}${!value.contains('.') || value.length == value.indexOf('.')+1 || value.contains('.00') ? value.split('.')[0] : value} zł',
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: value == 0 ? Colors.grey : value > 0 ? Colors.green : Colors.red
+                                          style: GoogleFonts.robotoCondensed(
+                                              fontSize: 20,
+                                              color: value == '0' ? Colors.grey : transactions[index].isExpense ? Colors.red : Colors.green
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
+                                  )
                                 ],
                               ),
                             )

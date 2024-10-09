@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fund_manager/pages/home.dart';
+import 'package:fund_manager/pages/transaction_history.dart';
 
 void main() {
   runApp(const FundManager());
@@ -90,7 +91,7 @@ class FundManager extends StatelessWidget {
           position: PopupMenuPosition.under
         )
       ),
-      home: const HomePage()
+      home: const History()
     );
   }
   }
