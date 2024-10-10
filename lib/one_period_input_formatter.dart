@@ -11,6 +11,9 @@ class OnePeriodInputFormatter implements TextInputFormatter {
     }
     if (oldValue.text.contains('.')) {
       if (newValue.text.length > oldValue.text.lastIndexOf('.')+3) {
+        if (newValue.text.split('.')[0] != oldValue.text.split('.')[0]) {
+          return newValue;
+        }
         return oldValue;
       }
     }

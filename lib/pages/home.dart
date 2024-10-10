@@ -42,22 +42,58 @@ class _HomeState extends State<Home> {
  
   String pokaSaldo (List<TransactionModel> transakcje){
     
-    int cale = 0;
-    int reszta = 0;
+    BigInt zero = BigInt.from(0);
+    BigInt one = BigInt.from(1);
+    BigInt ten = BigInt.from(10);
+    BigInt hundred = BigInt.from(100);
+    BigInt cale = BigInt.from(0);
+    BigInt reszta = BigInt.from(0);
     String saldo = '0';
+    String resztaTxt = '';
     if (transakcje.isNotEmpty) {
-      for (var i = 1; i <= transakcje.length; i++) {
+      saldo = '';
+      for (int i = 0; i < transakcje.length; i++) {
         TransactionModel index = transakcje[i];
         if (index.isExpense) {
           cale -= index.fullValue();
+
+          if (reszta > zero && (reszta - index.changeValue()) < zero){
+            cale -= one;
+            reszta += hundred;
+          } else if (reszta < zero && (reszta - index.changeValue()) < -hundred){
+            cale -= one;
+            reszta += hundred;
+          }
           reszta -= index.changeValue();
         }
         else {
           cale += index.fullValue();
+
+          if (reszta < zero && (reszta + index.changeValue()) > zero ){
+            cale += one;
+            reszta -= hundred;
+          } else if (reszta > zero && (reszta + index.changeValue()) > hundred){
+            cale += one;
+            reszta -= zero;
+          }
           reszta += index.changeValue();
         }
       }
-      saldo = '$cale.$reszta';
+
+      if (reszta < zero){
+        resztaTxt = reszta.toString().split('-')[1];
+      } else {
+        resztaTxt = '$reszta';
+      }
+      if (reszta == zero) {
+        saldo += '$cale';        
+      } else {
+        if (reszta > -ten && reszta < ten) {
+          saldo += '$cale.0$resztaTxt';
+        } else{
+          saldo += '$cale.$resztaTxt';
+        }
+      }
     }
 
     return saldo;
@@ -71,12 +107,35 @@ class _HomeState extends State<Home> {
         return SafeArea(
           child: Column(
             children: [
-              Text(
-                'Saldo: ${pokaSaldo(transactions)} zł',
-                style: GoogleFonts.robotoCondensed(
-                  fontSize: 30,
-                  color: Colors.black
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Saldo: ',
+                    style: GoogleFonts.robotoCondensed(
+                      fontSize: 30,
+                      color: Colors.black
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      pokaSaldo(transactions),
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.robotoCondensed(
+                        fontSize: 30,
+                        color: pokaSaldo(transactions) == '0' ? Colors.black : pokaSaldo(transactions).contains('-') ? Colors.red : Colors.green
+                    
+                      ),
+                    ),
+                  ),
+                  Text(
+                    ' zł',
+                    style: GoogleFonts.robotoCondensed(
+                      fontSize: 30,
+                      color: Colors.black
+                    ),
+                  ),
+                ],
               ),
               Center(
                 child: ElevatedButton(

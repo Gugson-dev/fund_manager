@@ -136,7 +136,9 @@ class _HistoryPageState extends State<History>
                     ElevatedButton(
                       onPressed: (){
                         setState(() {
-                            if (valueController.text.length == valueController.text.indexOf('.')+2) {
+                            if (!valueController.text.contains('.')) {
+                              valueController.text += '.00';
+                            } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
                               valueController.text += '0';
                             }
                             transactions.add(

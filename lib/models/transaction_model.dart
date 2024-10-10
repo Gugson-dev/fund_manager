@@ -34,13 +34,13 @@ class TransactionModel {
     };
   }
 
-  int fullValue() {
-    int amount = int.parse(value.split('.')[0]);
+  BigInt fullValue() {
+    BigInt amount = BigInt.parse(value.split('.')[0]);
     return amount;
   }
 
-  int changeValue() {
-    int amount = int.parse(value.split('.')[1]);
+  BigInt changeValue() {
+    BigInt amount = BigInt.parse(value.split('.')[1]);
     return amount;
   }
 }

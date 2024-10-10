@@ -87,7 +87,9 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
             ),
           ElevatedButton(
             onPressed: (){
-                if (valueController.text.length == valueController.text.indexOf('.')+2) {
+                if (!valueController.text.contains('.')) {
+                  valueController.text += '.00';
+                } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
                   valueController.text += '0';
                 }
                 transactions[index] = 
@@ -183,7 +185,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                                           overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.robotoCondensed(
                                               fontSize: 20,
-                                              color: value == '0' ? Colors.grey : transactions[index].isExpense ? Colors.red : Colors.green
+                                              color: value == '0.00' ? Colors.grey : transactions[index].isExpense ? Colors.red : Colors.green
                                           ),
                                         ),
                                       ),
