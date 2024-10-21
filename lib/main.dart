@@ -38,7 +38,7 @@ class FundManager extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Colors.blueGrey[800]),
           bodyLarge: TextStyle(
-              fontSize: 8,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Colors.blueGrey[800]),
           bodyMedium: TextStyle(fontSize: 14, color: Colors.blueGrey[700]),
@@ -48,7 +48,10 @@ class FundManager extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.blueGrey[800]!),
           ),
-          labelStyle: TextStyle(color: Colors.blueGrey[800]),
+          labelStyle: TextStyle(
+            fontSize: 15,
+            color: Colors.blueGrey[800]
+            ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(

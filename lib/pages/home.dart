@@ -18,7 +18,6 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
   List<TransactionModel> transactions = [];
-  double balance = 0;
 
   @override
   void initState(){
@@ -40,63 +39,57 @@ class _HomeState extends State<Home> {
     });
   }
  
-  String pokaSaldo (List<TransactionModel> transakcje){
-    
+  String pokaSaldo (List<TransactionModel> transakcje){ 
     BigInt zero = BigInt.from(0);
     BigInt one = BigInt.from(1);
     BigInt ten = BigInt.from(10);
     BigInt hundred = BigInt.from(100);
-    BigInt cale = BigInt.from(0);
-    BigInt reszta = BigInt.from(0);
-    String saldo = '0';
-    String resztaTxt = '';
+    BigInt fulls = zero;
+    BigInt change = zero;
+    String balance = '0';
+    String changeTxt = '';
+
     if (transakcje.isNotEmpty) {
-      saldo = '';
+      balance = '';
       for (int i = 0; i < transakcje.length; i++) {
         TransactionModel index = transakcje[i];
         if (index.isExpense) {
-          cale -= index.fullValue();
+          fulls -= index.fullValue();
 
-          if (reszta > zero && (reszta - index.changeValue()) < zero){
-            cale -= one;
-            reszta += hundred;
-          } else if (reszta < zero && (reszta - index.changeValue()) < -hundred){
-            cale -= one;
-            reszta += hundred;
+          if (change < zero && (change - index.changeValue()) < -hundred){
+            fulls -= one;
+            change += hundred;
           }
-          reszta -= index.changeValue();
+          change -= index.changeValue();
         }
         else {
-          cale += index.fullValue();
+          fulls += index.fullValue();
 
-          if (reszta < zero && (reszta + index.changeValue()) > zero ){
-            cale += one;
-            reszta -= hundred;
-          } else if (reszta > zero && (reszta + index.changeValue()) > hundred){
-            cale += one;
-            reszta -= zero;
+          if (change > zero && (change + index.changeValue()) > hundred){
+            fulls += one;
+            change -= hundred;
           }
-          reszta += index.changeValue();
+          change += index.changeValue();
         }
       }
 
-      if (reszta < zero){
-        resztaTxt = reszta.toString().split('-')[1];
+      if (change < zero){
+        changeTxt = change.toString().split('-')[1];
       } else {
-        resztaTxt = '$reszta';
+        changeTxt = '$change';
       }
-      if (reszta == zero) {
-        saldo += '$cale';        
+      if (change == zero) {
+        balance += '$fulls';        
       } else {
-        if (reszta > -ten && reszta < ten) {
-          saldo += '$cale.0$resztaTxt';
+        if (change > -ten && change < ten) {
+          balance += '$fulls.0$changeTxt';
         } else{
-          saldo += '$cale.$resztaTxt';
+          balance += '$fulls.$changeTxt';
         }
       }
     }
 
-    return saldo;
+    return balance;
   } 
 
   @override
