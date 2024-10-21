@@ -4,7 +4,15 @@ import 'package:fund_manager/pages/home.dart';
 
 AppBar appBar(BuildContext context) {
   return AppBar(
-    title: const Text('Fund Manager'),
+    title: GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Home())  
+        );
+      },
+      child: const Text('Fund Manager')
+    ),
     elevation: 0.0,
     centerTitle: true,
     leading: 
@@ -12,7 +20,7 @@ AppBar appBar(BuildContext context) {
         onTap: () {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomePage())  
+            MaterialPageRoute(builder: (context) => const Home())  
           );
         },
         child: Container(

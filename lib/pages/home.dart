@@ -1,31 +1,28 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/transaction_model.dart';
 import '../widgets/app_bar.dart';
-import '../widgets/transactions_history.dart';
+import 'transaction_history.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class Home extends StatefulWidget {
+  const Home({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<Home> createState() => _HomeState();
 }
 
-class _HomePageState extends State<HomePage> 
-    with SingleTickerProviderStateMixin {
+class _HomeState extends State<Home> {
+
   List<TransactionModel> transactions = [];
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
-  TextEditingController valueController = TextEditingController();
-  late TabController _tabController;
-  
 
   @override
   void initState(){
     super.initState();
     _getTransactions();
-    _tabController = TabController(initialIndex: 0, length: 2, vsync: this);
   }
 
   void _getTransactions() async {
@@ -41,173 +38,111 @@ class _HomePageState extends State<HomePage>
       }
     });
   }
+ 
+  String pokaSaldo (List<TransactionModel> transakcje){ 
+    BigInt zero = BigInt.from(0);
+    BigInt one = BigInt.from(1);
+    BigInt ten = BigInt.from(10);
+    BigInt hundred = BigInt.from(100);
+    BigInt fulls = zero;
+    BigInt change = zero;
+    String balance = '0';
+    String changeTxt = '';
 
-  void _saveTransactions() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('transactions', json.encode(transactions));
-  }
+    if (transakcje.isNotEmpty) {
+      balance = '';
+      for (int i = 0; i < transakcje.length; i++) {
+        TransactionModel index = transakcje[i];
+        if (index.isExpense) {
+          fulls -= index.fullValue();
 
-  void clearControllers() {
-    titleController.clear();
-    descriptionController.clear();
-    valueController.clear();
-    _tabController.index = 0;
-  }
+          if (change < zero && (change - index.changeValue()) < -hundred){
+            fulls -= one;
+            change += hundred;
+          }
+          change -= index.changeValue();
+        }
+        else {
+          fulls += index.fullValue();
 
-  Future<void> showAddTransactionDialog(BuildContext context) async {
-    bool isExpense = false;
-    return showDialog(
-      useSafeArea: true,
-      barrierDismissible: false,
-      context: context, 
-      builder: (context) {
-        return ScaffoldMessenger(
-          child: Builder(
-            builder: (context) {
-              return Scaffold(
-                backgroundColor: Colors.transparent,
-                body: AlertDialog(
-                  title: TabBar(
-                    controller: _tabController,
-                    onTap: (value) {
-                        if (_tabController.index == 0) {
-                          isExpense = false;
-                        } else {
-                          isExpense = true;
-                        }
-                    },
-                    tabs: const [
-                      Tab(
-                        child: Text('Wpłata')
-                      ),
-                      Tab(
-                        child: Text('Wydatek'),
-                      )
-                    ],
-                  ),
-                  content: SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width*0.3
-                      ),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 10,),
-                          TextField(
-                            controller: titleController,
-                            decoration: const InputDecoration(
-                              labelText: 'Tytuł transakcji',
-                            ),
-                          ),
-                          const SizedBox(height: 20,),
-                          TextField(
-                            controller: descriptionController,
-                            minLines: 1,
-                            maxLines: 4,
-                            decoration: const InputDecoration(
-                              labelText: 'Opis',
-                            ),
-                          ),
-                          const SizedBox(height: 20,),
-                          TextField(
-                            controller: valueController,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: 'Kwota',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  actions: [
-                    ElevatedButton(
-                      onPressed: (){
-                        Navigator.pop(context);
-                      }, 
-                      child: const Text('Zamknij')
-                      ),
-                    ElevatedButton(
-                      onPressed: (){
-                        setState(() {
-                          double? value = double.tryParse(valueController.text);
-                          if (value != null) {
-                            if (isExpense) {
-                              value *= -1;
-                            }
-                            transactions.add(
-                              TransactionModel(
-                                title: titleController.text, 
-                                description: descriptionController.text, 
-                                value: value, 
-                                date: DateTime.now(),
-                                isExpense: isExpense
-                              )
-                            );
-                            _saveTransactions();
-                            Navigator.pop(context);
-                          } else {
-                            const snackBar = SnackBar(
-                              content: SelectableText('Źle wypełniona kwota'),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                          }
-                        });
-                      },
-                      child: const Text('Dodaj')
-                    )
-                  ],
-                )
-              );   
-            }
-          )
-        );
+          if (change > zero && (change + index.changeValue()) > hundred){
+            fulls += one;
+            change -= hundred;
+          }
+          change += index.changeValue();
+        }
       }
-    );
-  }
+
+      if (change < zero){
+        changeTxt = change.toString().split('-')[1];
+      } else {
+        changeTxt = '$change';
+      }
+      if (change == zero) {
+        balance += '$fulls';        
+      } else {
+        if (change > -ten && change < ten) {
+          balance += '$fulls.0$changeTxt';
+        } else{
+          balance += '$fulls.$changeTxt';
+        }
+      }
+    }
+
+    return balance;
+  } 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBar(context),
-      body:  LayoutBuilder(builder: (context, constraints) {
+      body: LayoutBuilder(builder: (context, constraints){
         return SafeArea(
-          child: ListView(
+          child: Column(
             children: [
-              SizedBox(
-                height: constraints.maxHeight,
-                width: constraints.maxWidth,
-                child: Column(
-                  children: [              
-                    //searchField(),
-                    const SizedBox(height: 20,),
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          clearControllers();
-                          showAddTransactionDialog(context);
-                        }, 
-                        child: const Text('Dodaj transakcje')
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Saldo: ',
+                    style: GoogleFonts.robotoCondensed(
+                      fontSize: 30,
+                      color: Colors.black
+                    ),
+                  ),
+                  Flexible(
+                    child: Text(
+                      pokaSaldo(transactions),
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.robotoCondensed(
+                        fontSize: 30,
+                        color: pokaSaldo(transactions) == '0' ? Colors.black : pokaSaldo(transactions).contains('-') ? Colors.red : Colors.green
+                    
                       ),
                     ),
-                    const SizedBox(height: 20,),
-                    const Text(
-                      'Twoje transakcje',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600
-                      ),
+                  ),
+                  Text(
+                    ' zł',
+                    style: GoogleFonts.robotoCondensed(
+                      fontSize: 30,
+                      color: Colors.black
                     ),
-                    const SizedBox(height: 15,),
-                    Expanded(
-                      child: transactionHistory(transactions, context, () {setState(() {_saveTransactions();});}, _tabController)
-                    ),
-                  ],
-                )
-              )
+                  ),
+                ],
+              ),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const History())  
+                    );
+                  }, 
+                  child: const Text('Historia')
+                ),
+              ),
             ],
-          ),
+          )
         );
       }),
     );
