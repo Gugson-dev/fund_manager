@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +21,7 @@ class _HistoryPageState extends State<History>
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController valueController = TextEditingController();
+  TextEditingController categoryController = TextEditingController();
   late TabController _tabController;
   
 
@@ -122,6 +124,17 @@ class _HistoryPageState extends State<History>
                               OnePeriodInputFormatter(), // Custom formatter for one period
                             ],
                           ),
+                          const SizedBox(height: 20,),
+                          DropdownMenu<String>(
+                            expandedInsets: EdgeInsets.zero,
+                            label: const Text('Kategoria'),
+                            controller: categoryController,
+                            dropdownMenuEntries: const <DropdownMenuEntry<String>> [
+                              //if entry value exist like controller.text then nic
+                              //if entry value doesn't exist like controller.text then in set state add new entry
+                              DropdownMenuEntry(value: 'Jedzenie', label: 'Jedzenie')
+                            ],
+                          )
                         ],
                       ),
                     ),
