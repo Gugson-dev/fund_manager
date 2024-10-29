@@ -8,10 +8,11 @@ import '../one_period_input_formatter.dart';
 
 enum Menu {edytuj, usun}
 
-Future<void> showEditTransactionDialog(BuildContext context, List<TransactionModel> transactions, int index, VoidCallback onUpdate, TabController tabController) async {
+Future<void> showEditTransactionDialog(BuildContext context, List<TransactionModel> transactions, List<String> categories, int index, VoidCallback onUpdate, TabController tabController) async {
   TextEditingController titleController = TextEditingController(text: transactions[index].title);
   TextEditingController descriptionController = TextEditingController(text: transactions[index].description);
   TextEditingController valueController = TextEditingController(text: transactions[index].value);
+  TextEditingController categoryController = TextEditingController(text: transactions[index].category);
   bool isExpense = transactions[index].isExpense;
   
   return showDialog(
@@ -74,6 +75,17 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
                     OnePeriodInputFormatter(), // Custom formatter for one period
                   ],
                 ),
+                const SizedBox(height: 20,),
+                DropdownMenu<String>(
+                  expandedInsets: EdgeInsets.zero,
+                  label: const Text('Kategoria'),
+                  controller: categoryController,
+                  dropdownMenuEntries: categories.map((String value){
+                    //if entry value exist like controller.text then nic
+                    //if entry value doesn't exist like controller.text then in set state add new entry
+                    return DropdownMenuEntry(value: value, label: value);
+                  }).toList()
+                )
               ],
             ),
           ),
@@ -92,10 +104,13 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
                 } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
                   valueController.text += '0';
                 }
+                if (!categories.contains(categoryController.text)) {
+                  categories.add(categoryController.text);
+                }
                 transactions[index] = 
                   TransactionModel(
                     title: titleController.text, 
-                    description: descriptionController.text, 
+                    description: descriptionController.text,
                     value: valueController.text, 
                     date: DateTime.now(),
                     isExpense: isExpense
@@ -111,7 +126,7 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
     );
 }
   
-Container transactionHistory(List<TransactionModel> transactions, BuildContext context, VoidCallback onUpdate, TabController tabController) {
+Container transactionHistory(List<TransactionModel> transactions, List<String> categories, BuildContext context, VoidCallback onUpdate, TabController tabController) {
   return Container(
             margin: const EdgeInsets.only(left: 20, right: 20),
             child: ListView.separated(
@@ -218,12 +233,24 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                             child:Row(
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      transactions[index].description,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Kategoria: ${transactions[index].category}',//czemu znika
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                        Text(
+                                          transactions[index].description,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   PopupMenuButton<Menu>(
@@ -232,7 +259,7 @@ Container transactionHistory(List<TransactionModel> transactions, BuildContext c
                                       PopupMenuItem<Menu>(
                                         value: Menu.edytuj,
                                         onTap: () {
-                                          showEditTransactionDialog(context, transactions, index, onUpdate, tabController);
+                                          showEditTransactionDialog(context, transactions, categories, index, onUpdate, tabController);
                                         },
                                         child: const ListTile(
                                           leading: Icon(

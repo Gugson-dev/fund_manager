@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +22,7 @@ class _HistoryPageState extends State<History>
   TextEditingController valueController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
   late TabController _tabController;
+  List<String> categories = [];
   
 
   @override
@@ -36,7 +36,12 @@ class _HistoryPageState extends State<History>
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       final transactionsData = prefs.getString('transactions');
-      
+      final categoriesData = prefs.getStringList('categories');
+
+      if (categoriesData != null) {
+        categories = categoriesData;
+      }
+
       if (transactionsData != null) {
         final decodedData = json.decode(transactionsData) as List;
         transactions.addAll(
@@ -49,6 +54,7 @@ class _HistoryPageState extends State<History>
   void _saveTransactions() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('transactions', json.encode(transactions));
+    prefs.setStringList('categories', categories);
   }
 
   void clearControllers() {
@@ -56,6 +62,7 @@ class _HistoryPageState extends State<History>
     descriptionController.clear();
     valueController.clear();
     _tabController.index = 0;
+    categoryController.clear();
   }
 
   Future<void> showAddTransactionDialog(BuildContext context) async {
@@ -129,11 +136,11 @@ class _HistoryPageState extends State<History>
                             expandedInsets: EdgeInsets.zero,
                             label: const Text('Kategoria'),
                             controller: categoryController,
-                            dropdownMenuEntries: const <DropdownMenuEntry<String>> [
+                            dropdownMenuEntries: categories.map((String value){
                               //if entry value exist like controller.text then nic
                               //if entry value doesn't exist like controller.text then in set state add new entry
-                              DropdownMenuEntry(value: 'Jedzenie', label: 'Jedzenie')
-                            ],
+                              return DropdownMenuEntry(value: value, label: value);
+                            }).toList()
                           )
                         ],
                       ),
@@ -154,13 +161,17 @@ class _HistoryPageState extends State<History>
                             } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
                               valueController.text += '0';
                             }
+                            if (!categories.contains(categoryController.text)) {
+                              categories.add(categoryController.text);
+                            }
                             transactions.add(
                               TransactionModel(
                                 title: titleController.text, 
                                 description: descriptionController.text, 
                                 value: valueController.text, 
                                 date: DateTime.now(),
-                                isExpense: isExpense
+                                isExpense: isExpense,
+                                category: categoryController.text
                               )
                             );
                             _saveTransactions();
@@ -214,7 +225,7 @@ class _HistoryPageState extends State<History>
                     ),
                     const SizedBox(height: 15,),
                     Expanded(
-                      child: transactionHistory(transactions, context, () {setState(() {_saveTransactions();});}, _tabController)
+                      child: transactionHistory(transactions, categories, context, () {setState(() {_saveTransactions();});}, _tabController)
                     ),
                   ],
                 )
