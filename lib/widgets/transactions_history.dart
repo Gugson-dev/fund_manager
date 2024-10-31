@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction_model.dart';
 import '../one_period_input_formatter.dart';
+import '../my_extensions.dart';
 
 enum Menu {edytuj, usun}
 
@@ -12,7 +13,7 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
   TextEditingController titleController = TextEditingController(text: transactions[index].title);
   TextEditingController descriptionController = TextEditingController(text: transactions[index].description);
   TextEditingController valueController = TextEditingController(text: transactions[index].value);
-  TextEditingController categoryController = TextEditingController(text: transactions[index].category);
+  TextEditingController categoryController = TextEditingController(text: transactions[index].category.capitalize());
   bool isExpense = transactions[index].isExpense;
   
   return showDialog(
@@ -79,11 +80,10 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
                 DropdownMenu<String>(
                   expandedInsets: EdgeInsets.zero,
                   label: const Text('Kategoria'),
+                  hintText: 'Wpisz lub wyszukaj kategorie',
                   controller: categoryController,
                   dropdownMenuEntries: categories.map((String value){
-                    //if entry value exist like controller.text then nic
-                    //if entry value doesn't exist like controller.text then in set state add new entry
-                    return DropdownMenuEntry(value: value, label: value);
+                    return DropdownMenuEntry(value: value, label: value.capitalize());
                   }).toList()
                 )
               ],
@@ -104,16 +104,17 @@ Future<void> showEditTransactionDialog(BuildContext context, List<TransactionMod
                 } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
                   valueController.text += '0';
                 }
-                if (!categories.contains(categoryController.text)) {
-                  categories.add(categoryController.text);
+                if (!categories.contains(categoryController.text.toLowerCase())) {
+                  categories.add(categoryController.text.toLowerCase());
                 }
                 transactions[index] = 
                   TransactionModel(
                     title: titleController.text, 
                     description: descriptionController.text,
                     value: valueController.text, 
-                    date: DateTime.now(),
-                    isExpense: isExpense
+                    date: transactions[index].date,
+                    isExpense: isExpense,
+                    category: categoryController.text.toLowerCase()
                   );
                 //implement custom date
                 onUpdate();
@@ -160,7 +161,7 @@ Container transactionHistory(List<TransactionModel> transactions, List<String> c
                                   });
                                 },
                                 child: Text(
-                                  transactions[index].title,
+                                  transactions[index].title.capitalize(),
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 25,
@@ -237,14 +238,14 @@ Container transactionHistory(List<TransactionModel> transactions, List<String> c
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Kategoria: ${transactions[index].category}',//czemu znika
+                                          'Kategoria: ${transactions[index].category.capitalize()}',
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 18,
                                           ),
                                         ),
                                         Text(
-                                          transactions[index].description,
+                                          transactions[index].description.capitalize(),
                                           style: const TextStyle(
                                             color: Colors.white,
                                             fontSize: 20,

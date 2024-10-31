@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fund_manager/my_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
 import '../one_period_input_formatter.dart';
@@ -28,11 +29,11 @@ class _HistoryPageState extends State<History>
   @override
   void initState(){
     super.initState();
-    _getTransactions();
+    _getData();
     _tabController = TabController(initialIndex: 0, length: 2, vsync: this);
   }
 
-  void _getTransactions() async {
+  void _getData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       final transactionsData = prefs.getString('transactions');
@@ -51,7 +52,7 @@ class _HistoryPageState extends State<History>
     });
   }
 
-  void _saveTransactions() async {
+  void _saveData() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('transactions', json.encode(transactions));
     prefs.setStringList('categories', categories);
@@ -135,11 +136,10 @@ class _HistoryPageState extends State<History>
                           DropdownMenu<String>(
                             expandedInsets: EdgeInsets.zero,
                             label: const Text('Kategoria'),
+                            hintText: 'Wpisz lub wyszukaj kategorie',
                             controller: categoryController,
                             dropdownMenuEntries: categories.map((String value){
-                              //if entry value exist like controller.text then nic
-                              //if entry value doesn't exist like controller.text then in set state add new entry
-                              return DropdownMenuEntry(value: value, label: value);
+                              return DropdownMenuEntry(value: value, label: value.capitalize());
                             }).toList()
                           )
                         ],
@@ -161,8 +161,8 @@ class _HistoryPageState extends State<History>
                             } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
                               valueController.text += '0';
                             }
-                            if (!categories.contains(categoryController.text)) {
-                              categories.add(categoryController.text);
+                            if (!categories.contains(categoryController.text.toLowerCase())) {
+                              categories.add(categoryController.text.toLowerCase());
                             }
                             transactions.add(
                               TransactionModel(
@@ -171,10 +171,10 @@ class _HistoryPageState extends State<History>
                                 value: valueController.text, 
                                 date: DateTime.now(),
                                 isExpense: isExpense,
-                                category: categoryController.text
+                                category: categoryController.text.toLowerCase()
                               )
                             );
-                            _saveTransactions();
+                            _saveData();
                             Navigator.pop(context);
                         });
                       },
@@ -225,7 +225,7 @@ class _HistoryPageState extends State<History>
                     ),
                     const SizedBox(height: 15,),
                     Expanded(
-                      child: transactionHistory(transactions, categories, context, () {setState(() {_saveTransactions();});}, _tabController)
+                      child: transactionHistory(transactions, categories, context, () {setState(() {_getData();});}, _tabController)
                     ),
                   ],
                 )
