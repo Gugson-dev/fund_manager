@@ -225,7 +225,7 @@ class _HistoryPageState extends State<History>
                     ),
                     const SizedBox(height: 15,),
                     Expanded(
-                      child: transactionHistory(transactions, categories, context, () {setState(() {_getData();});}, _tabController)
+                      child: transactionHistory(transactions, categories, context, () {setState(() {});}, _tabController)
                     ),
                   ],
                 )
