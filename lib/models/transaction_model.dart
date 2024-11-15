@@ -13,8 +13,7 @@ class TransactionModel {
     required this.date,
     required this.isExpense,
     this.category = ''
-  }
-  );
+  });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(

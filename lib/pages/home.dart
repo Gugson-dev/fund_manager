@@ -117,7 +117,6 @@ class _HomeState extends State<Home> {
                       style: GoogleFonts.robotoCondensed(
                         fontSize: 30,
                         color: pokaSaldo(transactions) == '0' ? Colors.black : pokaSaldo(transactions).contains('-') ? Colors.red : Colors.green
-                    
                       ),
                     ),
                   ),
