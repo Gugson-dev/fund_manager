@@ -4,6 +4,7 @@ class TransactionModel {
   String value;
   DateTime date;
   bool isExpense;
+  String category;
 
   TransactionModel({
     required this.title,
@@ -11,8 +12,8 @@ class TransactionModel {
     required this.value,
     required this.date,
     required this.isExpense,
-  }
-  );
+    this.category = ''
+  });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
@@ -21,6 +22,7 @@ class TransactionModel {
       value: json['value'] ?? '0',
       date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
       isExpense: json['isExpense'] ?? false,
+      category: json['category'] ?? ''
     );
   }
 
@@ -31,6 +33,7 @@ class TransactionModel {
       'value': value,
       'date': date.toIso8601String(),
       'isExpense': isExpense,
+      'category': category
     };
   }
 
