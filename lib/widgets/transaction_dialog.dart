@@ -6,13 +6,21 @@ import 'package:fund_manager/my_extensions.dart';
 import '../models/transaction_model.dart';
 import '../one_period_input_formatter.dart';
 
+TextEditingController titleController = TextEditingController();
+TextEditingController descriptionController = TextEditingController();
+TextEditingController valueController = TextEditingController();
+TextEditingController categoryController = TextEditingController();
+
+void clearControllers() async {
+  await Future.delayed(const Duration(seconds: 1));
+  titleController.clear();
+  descriptionController.clear();
+  valueController.clear();
+  categoryController.clear();
+}
+
 void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabController tabController, List<String> categories, List<TransactionModel> transactions, [bool mode = false, bool isExpense = false, int index = 0]) async {
   
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
-  TextEditingController valueController = TextEditingController();
-  TextEditingController categoryController = TextEditingController();
-
   bool addCategory = false;
   
   if (mode) {
@@ -160,13 +168,14 @@ void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabContr
         ),
         actions: [
           ElevatedButton(
-            onPressed: (){
+            onPressed: () {
               Navigator.pop(context);
+              clearControllers();
             }, 
             child: const Text('Zamknij')
             ),
           ElevatedButton(
-            onPressed: (){
+            onPressed: () {
                 if (valueController.text.isEmpty) {
                   valueController.text = '0';
                 }
@@ -204,6 +213,7 @@ void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabContr
                 //implement custom date
                 onUpdate();
                 Navigator.pop(context);
+                clearControllers();
             },
               child: Text(mode ? 'Zmień' : 'Dodaj'))
         ],

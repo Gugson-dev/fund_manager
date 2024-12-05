@@ -48,7 +48,7 @@ import 'package:flutter/material.dart';
                         child: Icon(
                           CupertinoIcons.slider_horizontal_3,
                           color: Colors.black,
-                          semanticLabel: 'Go back',
+                          semanticLabel: 'Filters',
                         ),
                       ),
                     ],
