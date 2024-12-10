@@ -24,10 +24,6 @@ class _HistoryPageState extends State<History>
       
   List<TransactionModel> transactions = [];
   List<String> categories = [];
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
-  TextEditingController valueController = TextEditingController();
-  TextEditingController categoryController = TextEditingController();
   late TabController _tabController;
   
 
@@ -64,11 +60,7 @@ class _HistoryPageState extends State<History>
   }
 
   void clearControllers() {
-    titleController.clear();
-    descriptionController.clear();
-    valueController.clear();
     _tabController.index = 0;
-    categoryController.clear();
   }
 
   void onUpdate() {
@@ -90,7 +82,7 @@ class _HistoryPageState extends State<History>
                 child: Column(
                   children: [              
                     //searchField(),
-                    const SizedBox(height: 20,),
+                    /*const SizedBox(height: 20,),
                     Center(
                       child: ElevatedButton(
                         onPressed: () {
@@ -99,7 +91,7 @@ class _HistoryPageState extends State<History>
                         }, 
                         child: const Text('Dodaj transakcje')
                       ),
-                    ),
+                    ),*/
                     const SizedBox(height: 20,),
                     const Text(
                       'Twoje transakcje',
@@ -234,6 +226,7 @@ class _HistoryPageState extends State<History>
                                               Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
+                                                  const SizedBox(height: 2,),
                                                   Text(
                                                     'Kategoria: ${transactions[index].category.capitalize()}',
                                                     style: const TextStyle(
