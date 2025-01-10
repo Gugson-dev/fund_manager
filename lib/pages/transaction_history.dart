@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fund_manager/my_extensions.dart';
-import 'package:fund_manager/widgets/transaction_dialog.dart';
+import 'package:fund_manager/widgets/dialogs.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -70,6 +70,7 @@ class _HistoryPageState extends State<History>
 
   @override
   Widget build(BuildContext context) {
+    final tile = ModalRoute.of(context)!.settings.arguments;
     return Scaffold(
       appBar: appBar(context),
       body:  LayoutBuilder(builder: (context, constraints) {
@@ -114,6 +115,7 @@ class _HistoryPageState extends State<History>
                             return Card(
                               clipBehavior: Clip.antiAlias,
                               child: ExpansionTile(
+                                initiallyExpanded: tile == index,
                                 title: LayoutBuilder(
                                   builder: (context, constraints) {
                                     return Row(

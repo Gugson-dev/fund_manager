@@ -79,8 +79,8 @@ class FundManager extends StatelessWidget {
         dividerColor: Colors.transparent,
         splashColor: Colors.transparent,
         listTileTheme: const ListTileThemeData(
-          tileColor: Colors.black,
-          iconColor: Colors.white
+          tileColor: Colors.white,
+          iconColor: Colors.black
         ),
         expansionTileTheme: ExpansionTileThemeData(
           backgroundColor: Colors.black,

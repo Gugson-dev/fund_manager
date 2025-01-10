@@ -1,13 +1,14 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:fund_manager/my_extensions.dart';
+import 'package:fund_manager/pages/savings.dart';
+import 'package:fund_manager/widgets/linechart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
-import '../one_period_input_formatter.dart';
 import '../widgets/app_bar.dart';
-import '../widgets/transaction_dialog.dart';
+import '../widgets/dialogs.dart';
 import 'transaction_history.dart';
 
 class Home extends StatefulWidget {
@@ -18,15 +19,12 @@ class Home extends StatefulWidget {
 }
 
 
-class _HomeState extends State<Home> with TickerProviderStateMixin{
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 
   List<TransactionModel> transactions = [];
   List<String> categories = [];
-  late AnimationController controller;
+
   late TabController _tabController;
-  String title = '';
-  String description = '';
-  String value = ''; 
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   TextEditingController valueController = TextEditingController();
@@ -36,31 +34,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
     super.initState();
     _getData();
     _tabController = TabController(initialIndex: 0, length: 2, vsync: this);
-    controller = AnimationController(
-      vsync: this, 
-    )..addListener((){
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
   }
 
   void _getData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       final transactionsData = prefs.getString('transactions');
-      final savingData = prefs.getStringList('savings');
       final categoriesData = prefs.getStringList('categories');
-
-      if (savingData != null) {
-        title = savingData[0];
-        description = savingData[1];
-        value = savingData[2];
-      }
 
       if (categoriesData != null) {
         categories = categoriesData;
@@ -79,11 +59,13 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('transactions', json.encode(transactions));
     prefs.setStringList('categories', categories);
-    prefs.setStringList('savings', [titleController.text,descriptionController.text,valueController.text]);
   }
 
   void clearControllers() {
     _tabController.index = 0;
+    titleController.clear();
+    descriptionController.clear();
+    valueController.clear();
   }
 
   void onUpdate() {
@@ -144,12 +126,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
     return balance;
   } 
 
-  void clearControllers() {
-    titleController.clear();
-    descriptionController.clear();
-    valueController.clear();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -192,130 +168,159 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      clearControllers();
-                      showTransactionDialog(context, onUpdate, _tabController, categories, transactions, false);
-                    }, 
-                    child: const Text('Dodaj transakcje')
+                  Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          clearControllers();
+                          showTransactionDialog(context, onUpdate, _tabController, categories, transactions, false);
+                        }, 
+                        child:  const Icon(CupertinoIcons.plus_app, //zrobić grubszy plus
+                        size: 30,)
+                      ),
+                      const Text(
+                        'Dodaj transakcje',
+                        style: TextStyle(
+                          color: Colors.black
+                        ),
+                      )
+                    ],
                   ),
                   const SizedBox(width: 20,),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const History())  
-                      );
-                    }, 
-                    child: const Text('Historia')
+                  Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const History())  
+                          );
+                        }, 
+                        child: const Icon(
+                          CupertinoIcons.list_dash,
+                          size: 30,
+                        )
+                      ),
+                      const Text(
+                        'Historia',
+                        style: TextStyle(
+                          color: Colors.black
+                        ),
+                      )
+
+                    ],
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      clearControllers();
-                      addGoal(context);
-                    },
-                    child: const Text('Dodaj cel oszczczędnościowy')
+                  const SizedBox(width: 20,),
+                  Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const Savings())  
+                          );
+                        },
+                        child: const Icon(
+                          CupertinoIcons.money_dollar_circle,
+                          size: 30,
+                        )
+                      ),
+                      const Text(
+                        'Cele oszczędnościowe',
+                        style: TextStyle(
+                          color: Colors.black
+                        ),
+                      )
+                    ],
                   )
                 ],
               ),
               const SizedBox(height: 10,),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Twój cel: $title',
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20
-                    ),
-                  ),
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Positioned.fill(
-                        left: MediaQuery.of(context).size.width*0.25,
-                        right: MediaQuery.of(context).size.width*0.25,
-                        child: LinearProgressIndicator(
-                          color: Colors.green,
-                          backgroundColor: Colors.grey,
-                          value: value.isEmpty ? 0.00 : double.parse(pokaSaldo(transactions)) / double.parse(value), // zmienić do BigInta
-                          semanticsLabel: 'Twój cel $value',
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          '${!pokaSaldo(transactions).contains('.') || pokaSaldo(transactions).length == pokaSaldo(transactions).indexOf('.')+1 || pokaSaldo(transactions).contains('.00') ? pokaSaldo(transactions).split('.')[0] : pokaSaldo(transactions)} zł/${!value.contains('.') || value.length == value.indexOf('.')+1 || value.contains('.00') ? value.split('.')[0] : value} zł',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.black
-                          ),
-                        )
-                      )
-                    ]
-                  ),
-                ],
-                ],
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
+              Container(
+                margin: const EdgeInsets.only(left: 50,right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Ostatnie transakcje',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700
-                      ),
-                    ),
-                    const SizedBox(height: 10,),
+                  SizedBox(
+                    height: 400,
+                    width: MediaQuery.of(context).size.width*0.6,
+                    child:
+                      const LineChartSample1()
+                   /* Padding(
+                    padding: const EdgeInsets.all(30),
+                      child: PieChart(PieChartData(
+                        centerSpaceRadius: 5,
+                        borderData: FlBorderData(show: false),
+                        sectionsSpace: 2,
+                        sections: [
+                          PieChartSectionData(value: 35, color: Colors.purple, radius: 100),
+                          PieChartSectionData(value: 40, color: Colors.amber, radius: 100),
+                          PieChartSectionData(value: 55, color: Colors.green, radius: 100),
+                          PieChartSectionData(value: 70, color: Colors.orange, radius: 100),
+                        ]
+                      ))
+                  ) */,
+                ),
                     Container(
-                      height: MediaQuery.of(context).size.height*0.27,
-                      width: MediaQuery.of(context).size.width*0.3,
-                      margin: const EdgeInsets.only(left: 8),
+                      margin: const EdgeInsets.only(top: 30),
                       decoration: const BoxDecoration(
                         //color: Colors.blueGrey,
-                        border: Border(top: BorderSide(width: 5), right: BorderSide(width: 7), left:  BorderSide(width: 7), bottom: BorderSide(width: 10)),
-                        borderRadius: BorderRadius.only(bottomRight: Radius.circular(30)),
+                        border: Border(top: BorderSide(width: 8),left: BorderSide(width: 5),right: BorderSide(width: 5),bottom: BorderSide(width: 3)),
+                        borderRadius: BorderRadius.only(topLeft: Radius.circular(5),topRight: Radius.circular(5)),
                       ),
-                      child: PageView(
-                        physics: const NeverScrollableScrollPhysics(),
+                      child: Column(
                         children: [
-                          MouseRegion(
-                            cursor: SystemMouseCursors.click,
-                            child: GestureDetector(
-                              onTap: (){
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const History())  
-                                );
-                              },
-                              child: LayoutBuilder(builder: (context, constraints) {
-                                return ListView(
-                                  //physics: const NeverScrollableScrollPhysics(),
-                                 // primary: false,
-                                  children: [
-                                    SizedBox(
-                                      height: constraints.maxHeight,
-                                      width: constraints.maxWidth,
-                                      child: Column(
-                                        children: [              
-                                          Expanded(
-                                            child: Container(
-                                              //margin: const EdgeInsets.only(left: 20, right: 20),
-                                              child: ListView.separated(
-                                                itemCount: 3,
-                                                scrollDirection: Axis.vertical,
-                                                separatorBuilder: (context, index) => const SizedBox(height: 4,),
-                                                itemBuilder: (context, index) {
-                                                  String value = transactions[index].value;
-                                                  return Card(
+                          const Text(
+                            'Ostatnie transakcje',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700
+                            ),
+                          ),
+                          const SizedBox(height: 5,),
+                          Container(
+                            height: MediaQuery.of(context).size.height*0.50,
+                            width: MediaQuery.of(context).size.width*0.3,
+                            decoration: const BoxDecoration(
+                              //color: Colors.blueGrey,
+                              border: Border(top: BorderSide(width: 5)),
+                              //borderRadius: BorderRadius.only(bottomRight: Radius.circular(30)),
+                            ),
+                            child: PageView(
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: [
+                                LayoutBuilder(builder: (context, constraints) {
+                                  return SizedBox(
+                                    height: constraints.maxHeight,
+                                    width: constraints.maxWidth,
+                                    child: Column(
+                                      children: [              
+                                        Expanded(
+                                          child: ListView.separated(
+                                            itemCount: transactions.length < 5 ? transactions.length : 5,
+                                            scrollDirection: Axis.vertical,
+                                            separatorBuilder: (context, index) => const SizedBox(height: 4,),
+                                            itemBuilder: (context, index) {
+                                              String value = transactions[index].value;
+                                              return MouseRegion(
+                                                cursor: SystemMouseCursors.click,
+                                                child: GestureDetector(
+                                                  onTap: (){
+                                                    Navigator.pushReplacement(
+                                                      context,
+                                                      MaterialPageRoute(builder: (context) => const History(),
+                                                      settings: RouteSettings(
+                                                        arguments: index)
+                                                      )  
+                                                    );
+                                                  },
+                                                  child: Card(
                                                     //shadowColor: Colors.black,
                                                     elevation: 6,
                                                     clipBehavior: Clip.antiAlias,
                                                     child: ListTile(
+                                                      tileColor: Colors.black,
                                                       mouseCursor: SystemMouseCursors.click,
                                                       title: Row(
                                                         mainAxisSize: MainAxisSize.max,
@@ -347,117 +352,53 @@ class _HomeState extends State<Home> with TickerProviderStateMixin{
                                                                 ),
                                                               ),
                                                             ),
-                                                          )
+                                                          ),
                                                         ],
                                                       ),
                                                     )
-                                                  );
-                                                }
-                                              )
-                                            )
+                                                  ),
+                                                ),
+                                              );
+                                            }
                                           ),
-                                        ],
-                                      )
+                                        ),
+                                      ],
                                     )
-                                  ],
-                                );
-                              }),
+                                  );
+                                }),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    )
+                    ),
                   ],
                 ),
-              )
+              ),
+/*               const SizedBox(
+                height: 500,
+                width: 500,
+                child:
+                LineChartSample1()
+                 /* Padding(
+                  padding: const EdgeInsets.all(30),
+                    child: PieChart(PieChartData(
+                      centerSpaceRadius: 5,
+                      borderData: FlBorderData(show: false),
+                      sectionsSpace: 2,
+                      sections: [
+                        PieChartSectionData(value: 35, color: Colors.purple, radius: 100),
+                        PieChartSectionData(value: 40, color: Colors.amber, radius: 100),
+                        PieChartSectionData(value: 55, color: Colors.green, radius: 100),
+                        PieChartSectionData(value: 70, color: Colors.orange, radius: 100),
+                      ]
+                    ))
+                ) */,
+              ), */
             ],
           )
         );
       }),
     );
-  }
-
-  Future<dynamic> addGoal(BuildContext context) {
-    return showDialog(
-                      useSafeArea: true,
-                      barrierDismissible: false,
-                      context: context,
-                      builder: (context) {
-                        return ScaffoldMessenger(
-                          child: Builder(
-                            builder: (context) {
-                              return Scaffold(
-                                backgroundColor: Colors.transparent,
-                                body: AlertDialog(
-                                  title: const Text('Wpisz dane celu'),
-                                  content: SingleChildScrollView(
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                        maxWidth: MediaQuery.of(context).size.width*0.3
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          const SizedBox(height: 10,),
-                                          TextField(
-                                            controller: titleController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Tytuł transakcji',
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20,),
-                                          TextField(
-                                            controller: descriptionController,
-                                            minLines: 1,
-                                            maxLines: 4,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Opis',
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20,),
-                                          TextField(
-                                            controller: valueController,
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Kwota',
-                                            ),
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and periods
-                                              OnePeriodInputFormatter(), // Custom formatter for one period
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: (){
-                                        Navigator.pop(context);
-                                      }, 
-                                      child: const Text('Zamknij')
-                                      ),
-                                    ElevatedButton(
-                                      onPressed: (){
-                                        setState(() {
-                                            if (!valueController.text.contains('.')) {
-                                              valueController.text += '.00';
-                                            } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
-                                              valueController.text += '0';
-                                            }
-                                            _saveSaving();
-                                            value = valueController.text;
-                                            Navigator.pop(context);
-                                        });
-                                      },
-                                      child: const Text('Dodaj')
-                                    )
-                                  ],
-                                )
-                              );   
-                            }
-                          )
-                        );
-                      }
-                    );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fund_manager/models/savings_model.dart';
 import 'package:fund_manager/my_extensions.dart';
 
 import '../models/transaction_model.dart';
@@ -221,3 +222,93 @@ void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabContr
     }
   );
 }
+
+
+Future<dynamic> addGoal(BuildContext context, VoidCallback onUpdate, List<SavingModel> savings) {
+    return showDialog(
+                      useSafeArea: true,
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (context) {
+                        return ScaffoldMessenger(
+                          child: Builder(
+                            builder: (context) {
+                              return Scaffold(
+                                backgroundColor: Colors.transparent,
+                                body: AlertDialog(
+                                  title: const Text('Wpisz dane celu'),
+                                  content: SingleChildScrollView(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: MediaQuery.of(context).size.width*0.3
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 10,),
+                                          TextField(
+                                            controller: titleController,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Tytuł transakcji',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20,),
+                                          TextField(
+                                            controller: descriptionController,
+                                            minLines: 1,
+                                            maxLines: 4,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Opis',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20,),
+                                          TextField(
+                                            controller: valueController,
+                                            keyboardType: TextInputType.number,
+                                            decoration: const InputDecoration(
+                                              labelText: 'Kwota',
+                                            ),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and periods
+                                              OnePeriodInputFormatter(), // Custom formatter for one period
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                      onPressed: (){
+                                        Navigator.pop(context);
+                                      }, 
+                                      child: const Text('Zamknij')
+                                      ),
+                                    ElevatedButton(
+                                      onPressed: (){
+                                            if (!valueController.text.contains('.')) {
+                                              valueController.text += '.00';
+                                            } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
+                                              valueController.text += '0';
+                                            }
+                                            savings.add(
+                                              SavingModel(
+                                                title: titleController.text,
+                                                description: descriptionController.text,
+                                                value: valueController.text
+                                              )
+                                            );
+                                            onUpdate();
+                                            Navigator.pop(context);
+                                            clearControllers();
+                                      },
+                                      child: const Text('Dodaj')
+                                    )
+                                  ],
+                                )
+                              );   
+                            }
+                          )
+                        );
+                      }
+                    );
+  }
