@@ -12,14 +12,16 @@ TextEditingController descriptionController = TextEditingController();
 TextEditingController valueController = TextEditingController();
 TextEditingController categoryController = TextEditingController();
 
-void clearControllers() async {
-  await Future.delayed(const Duration(seconds: 1));
+void clearControllers([TabController ?tabController]) async {
+  await Future.delayed(const Duration(milliseconds: 500));
   titleController.clear();
   descriptionController.clear();
   valueController.clear();
   categoryController.clear();
+  tabController != null ? tabController.index = 0 : null;
 }
 
+// This function is used to show a dialog for adding a new transaction
 void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabController tabController, List<String> categories, List<TransactionModel> transactions, [bool mode = false, bool isExpense = false, int index = 0]) async {
   
   bool addCategory = false;
@@ -171,7 +173,7 @@ void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabContr
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              clearControllers();
+              clearControllers(tabController);
             }, 
             child: const Text('Zamknij')
             ),
@@ -214,7 +216,7 @@ void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabContr
                 //implement custom date
                 onUpdate();
                 Navigator.pop(context);
-                clearControllers();
+                clearControllers(tabController);
             },
               child: Text(mode ? 'Zmień' : 'Dodaj'))
         ],
@@ -223,92 +225,215 @@ void showTransactionDialog(BuildContext context, VoidCallback onUpdate, TabContr
   );
 }
 
-
+// This function is used to show a dialog for adding a new goal
 Future<dynamic> addGoal(BuildContext context, VoidCallback onUpdate, List<SavingModel> savings) {
     return showDialog(
-                      useSafeArea: true,
-                      barrierDismissible: false,
-                      context: context,
-                      builder: (context) {
-                        return ScaffoldMessenger(
-                          child: Builder(
-                            builder: (context) {
-                              return Scaffold(
-                                backgroundColor: Colors.transparent,
-                                body: AlertDialog(
-                                  title: const Text('Wpisz dane celu'),
-                                  content: SingleChildScrollView(
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                        maxWidth: MediaQuery.of(context).size.width*0.3
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          const SizedBox(height: 10,),
-                                          TextField(
-                                            controller: titleController,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Tytuł transakcji',
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20,),
-                                          TextField(
-                                            controller: descriptionController,
-                                            minLines: 1,
-                                            maxLines: 4,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Opis',
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20,),
-                                          TextField(
-                                            controller: valueController,
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              labelText: 'Kwota',
-                                            ),
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and periods
-                                              OnePeriodInputFormatter(), // Custom formatter for one period
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  actions: [
-                                    ElevatedButton(
-                                      onPressed: (){
-                                        Navigator.pop(context);
-                                      }, 
-                                      child: const Text('Zamknij')
-                                      ),
-                                    ElevatedButton(
-                                      onPressed: (){
-                                            if (!valueController.text.contains('.')) {
-                                              valueController.text += '.00';
-                                            } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
-                                              valueController.text += '0';
-                                            }
-                                            savings.add(
-                                              SavingModel(
-                                                title: titleController.text,
-                                                description: descriptionController.text,
-                                                value: valueController.text
-                                              )
-                                            );
-                                            onUpdate();
-                                            Navigator.pop(context);
-                                            clearControllers();
-                                      },
-                                      child: const Text('Dodaj')
-                                    )
-                                  ],
-                                )
-                              );   
+      useSafeArea: true,
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return ScaffoldMessenger(
+          child: Builder(
+            builder: (context) {
+              return Scaffold(
+                backgroundColor: Colors.transparent,
+                body: AlertDialog(
+                  title: const Text('Wpisz dane celu'),
+                  content: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width*0.3
+                      ),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 10,),
+                          TextField(
+                            controller: titleController,
+                            decoration: const InputDecoration(
+                              labelText: 'Tytuł celu',
+                            ),
+                          ),
+                          const SizedBox(height: 20,),
+                          TextField(
+                            controller: descriptionController,
+                            minLines: 1,
+                            maxLines: 4,
+                            decoration: const InputDecoration(
+                              labelText: 'Opis',
+                            ),
+                          ),
+                          const SizedBox(height: 20,),
+                          TextField(
+                            controller: valueController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Cel (kwota)',
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and periods
+                              OnePeriodInputFormatter(), // Custom formatter for one period
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    ElevatedButton(
+                      onPressed: (){
+                        Navigator.pop(context);
+                        clearControllers();
+                      }, 
+                      child: const Text('Zamknij')
+                      ),
+                    ElevatedButton(
+                      onPressed: (){
+                            if (valueController.text.isEmpty) {
+                              valueController.text = '0';
                             }
-                          )
-                        );
-                      }
-                    );
+                            if (!valueController.text.contains('.')) {
+                              valueController.text += '.00';
+                            } else if (valueController.text.length == valueController.text.indexOf('.')+2) {
+                              valueController.text += '0';
+                            }
+                            savings.add(
+                              SavingModel(
+                                title: titleController.text,
+                                description: descriptionController.text,
+                                goal: valueController.text,
+                                donated: '0'
+                              )
+                            );
+                            onUpdate();
+                            Navigator.pop(context);
+                            clearControllers();
+                      },
+                      child: const Text('Dodaj')
+                    )
+                  ],
+                )
+              );   
+            }
+          )
+        );
+      }
+    );
   }
+
+// This function is used to show a dialog for managing a goal transaction
+  Future<dynamic> manageGoalTransaction(BuildContext context, VoidCallback onUpdate, List<SavingModel> savings, List<TransactionModel> transactions, int index, bool isDonation) {
+  return showDialog(
+    useSafeArea: true,
+    barrierDismissible: false,
+    context: context,
+    builder: (context) {
+      return ScaffoldMessenger(
+        child: Builder(
+          builder: (context) {
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              body: AlertDialog(
+                title: Text('Cel: ${savings[index].title}'),
+                content: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.3,
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10,),
+                        TextField(
+                          controller: valueController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: isDonation ? 'Kwota do wpłaty' : 'Kwota do wypłaty',
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // Allow only numbers and periods
+                            OnePeriodInputFormatter(), // Custom formatter for one period
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      clearControllers();
+                    },
+                    child: const Text('Zamknij'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (!valueController.text.contains('.')) {
+                        valueController.text += '.00';
+                      } else if (valueController.text.length == valueController.text.indexOf('.') + 2) {
+                        valueController.text += '0';
+                      }
+                      double transactionAmount = double.parse(valueController.text);
+                      double currentDonated = double.parse(savings[index].donated);
+                      double goalAmount = double.parse(savings[index].goal);
+  
+                      if (isDonation) {
+                        if (currentDonated + transactionAmount <= goalAmount) {
+                          savings[index].donated = (currentDonated + transactionAmount).toString();
+                          transactions.add(
+                            TransactionModel(
+                              title: 'Wpłata na cel "${savings[index].title}"', 
+                              description: 'Opis celu: ${savings[index].description}', 
+                              value: valueController.text, 
+                              date: DateTime.now(),
+                              isExpense: true,
+                              category: 'cele oszczędnościowe'
+                            )
+                          );
+                          onUpdate();
+                          Navigator.pop(context);
+                          clearControllers();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Kwota przekracza cel'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } else {
+                        if (currentDonated >= transactionAmount) {
+                          savings[index].donated = (currentDonated - transactionAmount).toString();
+                          transactions.add(
+                            TransactionModel(
+                              title: 'Wypłata z celu "${savings[index].title}"', 
+                              description: 'Opis celu: ${savings[index].description}', 
+                              value: valueController.text, 
+                              date: DateTime.now(),
+                              isExpense: false,
+                              category: 'cele oszczędnościowe'
+                            )
+                          );
+                          onUpdate();
+                          Navigator.pop(context);
+                          clearControllers();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Kwota jest większa niż wpłacona do tej pory'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: Text(isDonation ? 'Wpłać' : 'Wypłać'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    },
+  );
+}

@@ -18,15 +18,15 @@ AppBar appBar(BuildContext context) {
     ),
     elevation: 0.0,
     centerTitle: true,
-    leading: MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const Home())  
-          );
-        },
+    leading: GestureDetector(
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Home())  
+        );
+      },
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
         child: Container(
           margin: const EdgeInsets.all(10),
           alignment: Alignment.center,
@@ -40,34 +40,34 @@ AppBar appBar(BuildContext context) {
       ),
     ),
     actions: [
-      MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Informacje'),
-                  content: const Text('Karolina to najpiękniejsza dziewczyna na świecie'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        showLicensePage(context: context);
-                      },
-                      child: const Text('Pokaż licencje'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Zamknij'),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
+      GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Informacje'),
+                content: const Text('Karolina to najpiękniejsza dziewczyna na świecie'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      showLicensePage(context: context);
+                    },
+                    child: const Text('Pokaż licencje'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Zamknij'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
           child: Container(
             margin: const EdgeInsets.all(10),
             alignment: Alignment.center,

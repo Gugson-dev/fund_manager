@@ -23,11 +23,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
 
   List<TransactionModel> transactions = [];
   List<String> categories = [];
+  List<TransactionModel> reversedTransactions = [];
 
   late TabController _tabController;
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
-  TextEditingController valueController = TextEditingController();
 
   @override
   void initState(){
@@ -51,26 +49,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
         transactions.addAll(
           decodedData.map((transactionMap) => TransactionModel.fromJson(transactionMap)).toList()
         );
+        reversedTransactions = transactions.reversed.toList();
       }
     });
   }
   
-  void _saveData() async {
+  void saveData() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('transactions', json.encode(transactions));
     prefs.setStringList('categories', categories);
   }
 
-  void clearControllers() {
-    _tabController.index = 0;
-    titleController.clear();
-    descriptionController.clear();
-    valueController.clear();
-  }
-
   void onUpdate() {
     setState(() {});
-    _saveData();
+    saveData();
+    reversedTransactions = transactions.reversed.toList();
   }
  
   String pokaSaldo (List<TransactionModel> transactions){ 
@@ -90,7 +83,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
         if (index.isExpense) {
           fulls -= index.fullValue();
 
-          if (change < zero && (change - index.changeValue()) < -hundred){
+          if (change > zero && (change - index.changeValue()) < zero){
             fulls -= one;
             change += hundred;
           }
@@ -172,7 +165,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          clearControllers();
                           showTransactionDialog(context, onUpdate, _tabController, categories, transactions, false);
                         }, 
                         child:  const Icon(CupertinoIcons.plus_app, //zrobić grubszy plus
@@ -217,7 +209,9 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                         onPressed: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const Savings())  
+                            MaterialPageRoute(
+                              builder: (context) => const Savings(),
+                            )  
                           );
                         },
                         child: const Icon(
@@ -241,26 +235,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                  SizedBox(
-                    height: 400,
-                    width: MediaQuery.of(context).size.width*0.6,
-                    child:
-                      const LineChartSample1()
-                   /* Padding(
-                    padding: const EdgeInsets.all(30),
-                      child: PieChart(PieChartData(
-                        centerSpaceRadius: 5,
-                        borderData: FlBorderData(show: false),
-                        sectionsSpace: 2,
-                        sections: [
-                          PieChartSectionData(value: 35, color: Colors.purple, radius: 100),
-                          PieChartSectionData(value: 40, color: Colors.amber, radius: 100),
-                          PieChartSectionData(value: 55, color: Colors.green, radius: 100),
-                          PieChartSectionData(value: 70, color: Colors.orange, radius: 100),
-                        ]
-                      ))
-                  ) */,
-                ),
+                    SizedBox(
+                      height: 400,
+                      width: MediaQuery.of(context).size.width*0.6,
+                      child: const LineChartSample1(),
+                    ),
                     Container(
                       margin: const EdgeInsets.only(top: 30),
                       decoration: const BoxDecoration(
@@ -280,7 +259,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                           ),
                           const SizedBox(height: 5,),
                           Container(
-                            height: MediaQuery.of(context).size.height*0.50,
+                            height: 335,
                             width: MediaQuery.of(context).size.width*0.3,
                             decoration: const BoxDecoration(
                               //color: Colors.blueGrey,
@@ -291,6 +270,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                               physics: const NeverScrollableScrollPhysics(),
                               children: [
                                 LayoutBuilder(builder: (context, constraints) {
+                                  // odwrócenie listy
                                   return SizedBox(
                                     height: constraints.maxHeight,
                                     width: constraints.maxWidth,
@@ -298,11 +278,12 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                                       children: [              
                                         Expanded(
                                           child: ListView.separated(
-                                            itemCount: transactions.length < 5 ? transactions.length : 5,
+                                            itemCount: reversedTransactions.length < 5 ? reversedTransactions.length : 5,
                                             scrollDirection: Axis.vertical,
                                             separatorBuilder: (context, index) => const SizedBox(height: 4,),
-                                            itemBuilder: (context, index) {
-                                              String value = transactions[index].value;
+                                            itemBuilder: (context, index) { 
+                                               //Coś tu się pierdzieli                         
+                                              String value = reversedTransactions[index].value;
                                               return MouseRegion(
                                                 cursor: SystemMouseCursors.click,
                                                 child: GestureDetector(
@@ -311,7 +292,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                                                       context,
                                                       MaterialPageRoute(builder: (context) => const History(),
                                                       settings: RouteSettings(
-                                                        arguments: index)
+                                                        arguments: transactions.length-1-index)
                                                       )  
                                                     );
                                                   },
@@ -328,7 +309,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                                                         children: [
                                                           Expanded(
                                                             child: Text(
-                                                              transactions[index].title.capitalize(),
+                                                              reversedTransactions[index].title.capitalize(),
                                                               overflow: TextOverflow.ellipsis,
                                                               style: const TextStyle(
                                                                 fontSize: 25,
@@ -343,11 +324,11 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                                                               child: Padding(
                                                                 padding: const EdgeInsets.only(left: 8.0),
                                                                 child: Text(
-                                                                  '${transactions[index].isExpense ? '-' : ''}${!value.contains('.') || value.length == value.indexOf('.')+1 || value.contains('.00') ? value.split('.')[0] : value} zł',
+                                                                  '${reversedTransactions[index].isExpense ? '-' : ''}${!value.contains('.') || value.length == value.indexOf('.')+1 || value.contains('.00') ? value.split('.')[0] : value} zł',
                                                                   overflow: TextOverflow.ellipsis,
                                                                   style: GoogleFonts.robotoCondensed(
                                                                       fontSize: 20,
-                                                                      color: value == '0.00' ? Colors.grey : transactions[index].isExpense ? Colors.red : Colors.green
+                                                                      color: value == '0.00' ? Colors.grey : reversedTransactions[index].isExpense ? Colors.red : Colors.green
                                                                   ),
                                                                 ),
                                                               ),
@@ -375,26 +356,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
                   ],
                 ),
               ),
-/*               const SizedBox(
-                height: 500,
-                width: 500,
-                child:
-                LineChartSample1()
-                 /* Padding(
-                  padding: const EdgeInsets.all(30),
-                    child: PieChart(PieChartData(
-                      centerSpaceRadius: 5,
-                      borderData: FlBorderData(show: false),
-                      sectionsSpace: 2,
-                      sections: [
-                        PieChartSectionData(value: 35, color: Colors.purple, radius: 100),
-                        PieChartSectionData(value: 40, color: Colors.amber, radius: 100),
-                        PieChartSectionData(value: 55, color: Colors.green, radius: 100),
-                        PieChartSectionData(value: 70, color: Colors.orange, radius: 100),
-                      ]
-                    ))
-                ) */,
-              ), */
             ],
           )
         );

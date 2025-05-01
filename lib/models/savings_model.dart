@@ -1,12 +1,16 @@
 class SavingModel {
   String title;
   String description;
-  String value;
+  String donated;
+  String goal;
+  String photo;
 
   SavingModel ({
     required this.title,
     required this.description,
-    required this.value,
+    required this.donated,
+    required this.goal,
+    this.photo = ''
   }
   );
 
@@ -14,7 +18,9 @@ class SavingModel {
     return SavingModel(
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      value: json['value'] ?? '0',
+      donated: json['donated'] ?? '0',
+      goal: json['goal'] ?? '0',
+      photo: json['photo'] ?? '',
     );
   }
 
@@ -22,16 +28,18 @@ class SavingModel {
     return {
       'title': title,
       'description': description,
-      'value': value,
+      'donated': donated,
+      'goal': goal,
+      'photo': photo,
     };
   }
 
-  BigInt fullValue() {
+  BigInt fullValue(String value) {
     BigInt amount = BigInt.parse(value.split('.')[0]);
     return amount;
   }
 
-  BigInt changeValue() {
+  BigInt changeValue(String value) {
     BigInt amount = BigInt.parse(value.split('.')[1]);
     return amount;
   }

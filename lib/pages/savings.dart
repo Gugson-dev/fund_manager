@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
+
+import '../models/transaction_model.dart';
 import '../widgets/app_bar.dart';
 
 class Savings extends StatefulWidget {
@@ -22,22 +24,21 @@ class Savings extends StatefulWidget {
 class _SavingsState extends State<Savings> {
 
   List<SavingModel> savings = [];
-  List<File> _images = [];
-  TextEditingController valueController = TextEditingController();
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
+  List<TransactionModel> transactions = [];
+
 
     @override
-  void initState(){
+  void initState() {
     super.initState();
-    _getData();
-    _loadImages();
+    _loadData();
   }
 
-  void _getData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
+  void _loadData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
       final savingData = prefs.getString('savings');
+      final transactionsData = prefs.getString('transactions');
+
 
       if (savingData != null) {
         final decodedData = json.decode(savingData) as List;
@@ -45,82 +46,51 @@ class _SavingsState extends State<Savings> {
           decodedData.map((transactionMap) => SavingModel.fromJson(transactionMap)).toList()
         );
       }
-    });
+
+      if (transactionsData != null) {
+        final decodedData = json.decode(transactionsData) as List;
+        transactions.addAll(
+          decodedData.map((transactionMap) => TransactionModel.fromJson(transactionMap)).toList()
+        );
+      }
+      setState(() {});
+    } catch (e) {
+      if (kDebugMode) {
+        print('Wystąpił błąd podczas ładowania danych: $e');
+      }
+    }
   }
   
-  void _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('savings', json.encode(savings));
-  }
-
-  Future<void> _loadImages() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? imagePaths = prefs.getStringList('saved_images');
-    if (imagePaths != null) {
-      setState(() {
-        _images = imagePaths
-            .where((path) => File(path).existsSync()) // Usuwanie niedostępnych plików
-            .map((path) => File(path))
-            .toList();
-      });
+  void saveData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString('savings', json.encode(savings));
+      prefs.setString('transactions', json.encode(transactions));
+      setState(() {});
+    } catch (e) {
+      if (kDebugMode) {
+        print('Wystąpił błąd podczas zapisywania danych: $e');
+      }
     }
   }
 
-  Future<void> _pickImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-    );
-
-    if (result != null) {
-      final Directory appDir = await getApplicationDocumentsDirectory();
-      final String filePath =
-          '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg'; // Unikalna nazwa pliku
-      final File savedImage = await File(result.files.single.path!).copy(filePath);
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String> imagePaths = prefs.getStringList('saved_images') ?? [];
-      imagePaths.add(savedImage.path);
-      await prefs.setStringList('saved_images', imagePaths);
-
-      setState(() {
-        _images.add(savedImage);
-      });
-    }
-  }
-
-  Future<void> changeImage(int index) async {
+  Future<void> chooseImage(int index) async {
   try {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
     );
-
-    if (result != null && index >= 0 && index < _images.length) {
+    if (result != null) {
       // Ścieżka do nowego zdjęcia
       final Directory appDir = await getApplicationDocumentsDirectory();
       final String filePath =
           '${appDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final File newImage = await File(result.files.single.path!).copy(filePath);
-
-      // Aktualizacja w `SharedPreferences`
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String> imagePaths = prefs.getStringList('saved_images') ?? [];
-
-      if (imagePaths.length > index) {
-        // Usuń stare zdjęcie
-        File oldImage = _images[index];
-        if (await oldImage.exists()) {
-          await oldImage.delete();
-        }
-
-        // Zastąp stare zdjęcie nową ścieżką
-        imagePaths[index] = newImage.path;
-        await prefs.setStringList('saved_images', imagePaths);
+      final File choosedImage = await File(result.files.single.path!).copy(filePath);
 
         // Zaktualizuj listę w stanie
         setState(() {
-          _images[index] = newImage;
+          savings[index].photo = choosedImage.path;
+          saveData();
         });
-      }
     }
   } catch (e) {
     if (kDebugMode) {
@@ -131,33 +101,21 @@ class _SavingsState extends State<Savings> {
 
 
   Future<void> deleteImage(int index) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> imagePaths = prefs.getStringList('saved_images') ?? [];
-    File imageFile = _images[index];
-
-    if (await imageFile.exists()) {
-      await imageFile.delete(); // Usuń plik z systemu plików
+    try {
+      setState(() {
+        savings[index].photo = '';
+        saveData();
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print('Wystąpił błąd podczas usuwania zdjęcia: $e');
+      }
     }
-
-    imagePaths.removeAt(index); // Usuń ścieżkę z listy
-    await prefs.setStringList('saved_images', imagePaths);
-
-    setState(() {
-      _images.removeAt(index);
-    });
   }
 
-  void clearControllers() {
-    titleController.clear();
-    descriptionController.clear();
-    valueController.clear();
+  String showMoney(String value) {
+    return !value.contains('.') || value.length == value.indexOf('.')+1 || value.contains('.00') ? value.split('.')[0] : value;
   }
-
-  void onUpdate() {
-    setState(() {});
-    _saveData();
-  }
-
 
 
   @override
@@ -176,17 +134,18 @@ class _SavingsState extends State<Savings> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        clearControllers();
-                        addGoal(context,onUpdate,savings);
+                        addGoal(context,saveData,savings);
                       },
                       child: const Icon(
                         CupertinoIcons.add_circled,
                         size: 30,
                       )
                     ),
-                    const Text(
+                     const Text(
                       'Dodaj cel oszczędnościowy',
                       style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
                         color: Colors.black
                       ),
                     )
@@ -194,51 +153,119 @@ class _SavingsState extends State<Savings> {
                 ),
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.only(left: 20, right: 20),
+                    margin: const EdgeInsets.all(20),
                     child: ListView.separated(                          
                       itemCount: savings.length,
                       scrollDirection: Axis.vertical,
-                      separatorBuilder: (context, index) => const SizedBox(height: 10,),
+                      separatorBuilder: (context, index) => const SizedBox(height: 40,),
                       itemBuilder: (context, index) {
-                        return SizedBox(
+                        return Container(
+                          padding: const EdgeInsets.all(20), 
+                          decoration: BoxDecoration(
+                            color: Colors.grey[600],
+                            border: Border.all(
+                              color: Colors.black,
+                              width: 2
+                            ),
+                            borderRadius: BorderRadius.circular(10)
+                          ),
                           width: MediaQuery.of(context).size.width*0.9,
                           child: Row(
                             children: [
                               Column(
                                 children: [
-                                  MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: GestureDetector(
-                                      onTap: (){
-                                        if (_images.isNotEmpty && index < _images.length && File(_images[index].path).existsSync()) {
-                                          changeImage(index);
-                                        } else {
-                                          _pickImage();
-                                        }
-                                      },
-                                      child: Container(
+                                  savings[index].photo.isNotEmpty && File(savings[index].photo).existsSync() ?
+                                  Stack(
+                                    children: [
+                                      Container(
+                                      width: MediaQuery.of(context).size.width*0.1,
+                                      height: MediaQuery.of(context).size.height*0.1,           
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.black,
+                                          width: 2
+                                        ),
+                                        image: DecorationImage(
+                                          image: FileImage(File(savings[index].photo)) as ImageProvider, 
+                                          fit: BoxFit.fill
+                                        )
+                                      )
+                                    ),
+                                    Positioned(
+                                      right: 2,
+                                      top: 3,
+                                      child: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        child: GestureDetector(
+                                          onTap: (){
+                                            deleteImage(index);
+                                          },
+                                          child: const Icon(
+                                            CupertinoIcons.trash_fill, 
+                                            size: 16,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      )
+                                    )
+                                  ]
+                                  )
+                                  :
+                                  Stack(
+                                    children: [
+                                      Container(
                                         width: MediaQuery.of(context).size.width*0.1,
-                                        height: MediaQuery.of(context).size.height*0.05,           
+                                        height: MediaQuery.of(context).size.height*0.1,           
                                         decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image:_images.isNotEmpty && index < _images.length && File(_images[index].path).existsSync()
-                                              ? FileImage(_images[index]) as ImageProvider
-                                              : const AssetImage('assets/images/placeholder-image-removebg-preview.png'),
-                                            fit:_images.isNotEmpty && index < _images.length && File(_images[index].path).existsSync()
-                                              ? BoxFit.fill
-                                              : BoxFit.cover
+                                          border: Border.all(
+                                            color: Colors.black,
+                                            width: 2
+                                          ),
+                                          image: const DecorationImage(
+                                            image: AssetImage('assets/images/placeholder-image-removebg-preview.png'),
+                                            fit: BoxFit.cover
                                           )
                                         )
                                       ),
-                                    ),
+                                      Positioned(
+                                        left: 3,
+                                        bottom: 2,
+                                        child: MouseRegion(
+                                          cursor: SystemMouseCursors.click,
+                                          child: GestureDetector(
+                                            onTap: (){
+                                              chooseImage(index);
+                                            },
+                                            child: const Icon(
+                                              CupertinoIcons.photo_camera_solid, 
+                                              size: 16
+                                            ),
+                                          ),
+                                        )
+                                      )
+                                    ]
                                   ),
                                   const SizedBox(height: 10,),
-                                  ElevatedButton(
-                                    onPressed:()
-                                      {
-                                      
-                                      }, 
-                                    child: const Text('Wpłać')
+                                  Row(
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed:()
+                                          {
+                                            clearControllers();
+                                            manageGoalTransaction(context, saveData, savings, transactions, index, true);
+                                          }, 
+                                        child: const Text('Wpłać')
+                                      ),
+                                      const SizedBox(width: 10,),
+                                      ElevatedButton(
+                                        onPressed:()
+                                          {
+                                            clearControllers();
+                                            manageGoalTransaction(context, saveData, savings, transactions, index, false);
+                                          }, 
+                                        child: const Text('Wypłać')
+                                      )
+                                    ],
                                   )
                                 ],
                               ),
@@ -250,29 +277,38 @@ class _SavingsState extends State<Savings> {
                                     style: const TextStyle(
                                       color: Colors.black,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 20
+                                      fontSize: 30
                                     ),
                                   ),
-                                  const SizedBox(height: 10,),
+                                  const SizedBox(height: 20,),
                                   SizedBox(
-                                    width: MediaQuery.of(context).size.width*0.75,
+                                    width: MediaQuery.of(context).size.width*0.65,
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       children: [
                                         Stack(
                                           children: [
                                             Positioned.fill(
-                                              child: LinearProgressIndicator(
-                                                color: Colors.green,
-                                                backgroundColor: Colors.grey,
-                                                borderRadius: BorderRadius.circular(10),
-                                                value: savings[index].value.isEmpty ? 0.00 : 10 / double.parse(savings[index].value), // zmienić do BigInta
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    color: Colors.black,
+                                                    width: 2
+                                                  ),
+                                                  borderRadius: BorderRadius.circular(10)
+                                                ),
+                                                child: LinearProgressIndicator(
+                                                  color: Colors.green,
+                                                  backgroundColor: Colors.grey,
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  value: savings[index].goal.isEmpty ? 0.00 : double.parse(savings[index].donated) / double.parse(savings[index].goal), // zmienić do BigInta
+                                                ),
                                               ),
                                             ),
                                             Align(
                                               alignment: Alignment.center,
                                               child: Text(
-                                                '10 zł/${!savings[index].value.contains('.') || savings[index].value.length == savings[index].value.indexOf('.')+1 || savings[index].value.contains('.00') ? savings[index].value.split('.')[0] : savings[index].value} zł',
+                                                '${showMoney(savings[index].donated)} zł/${showMoney(savings[index].goal)} zł',
                                                 style: const TextStyle(
                                                   fontSize: 20,
                                                   color: Colors.black
@@ -285,6 +321,28 @@ class _SavingsState extends State<Savings> {
                                     )
                                   ),
                                 ],
+                              ),
+                              Align(
+                                alignment: Alignment.topRight,
+                                child:
+                              ElevatedButton(
+                                onPressed: (){
+                                  try {
+                                    setState(() {
+                                      savings.removeAt(index);
+                                      saveData();
+                                    });
+                                  } catch (e) {
+                                    if (kDebugMode) {
+                                      print('Wystąpił błąd podczas usuwania celu oszczędnościowego: $e');
+                                    }
+                                  }
+                                },
+                                child: const Icon(
+                                  CupertinoIcons.delete,
+                                  size: 30,
+                                )
+                              )
                               )
                             ]
                           )
@@ -301,72 +359,3 @@ class _SavingsState extends State<Savings> {
     );
   }
 }
-
-/* import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-
-class ImagePickerDesktopScreen extends StatefulWidget {
-  const ImagePickerDesktopScreen({super.key});
-
-  @override
-  _ImagePickerDesktopScreenState createState() => _ImagePickerDesktopScreenState();
-}
-
-class _ImagePickerDesktopScreenState extends State<ImagePickerDesktopScreen> {
-  File? _image;
-
-
-
-Future<void> _loadImage() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? imagePath = prefs.getString('saved_image');
-  if (imagePath != null && File(imagePath).existsSync()) {
-    setState(() {
-      _image = File(imagePath);
-    });
-  }
-}
-
-
-Future<void> _pickImage() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles(
-    type: FileType.image,
-  );
-
-  if (result != null) {
-    final Directory appDir = await getApplicationDocumentsDirectory();
-    final String filePath = '${appDir.path}/saved_image.jpg';
-    final File savedImage = await File(result.files.single.path!).copy(filePath);
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('saved_image', savedImage.path);
-
-    setState(() {
-      _image = savedImage;
-    });
-  }
-}
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Image Picker for Desktop'),
-      ),
-      body: Center(
-        child: _image != null
-            ? Image.file(_image!)
-            : const Text('No image selected'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _pickImage,
-        child: const Icon(Icons.add_a_photo),
-      ),
-    );
-  }
-} */
